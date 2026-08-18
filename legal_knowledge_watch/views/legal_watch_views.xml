@@ -9,6 +9,9 @@
                 <field name="name"/>
                 <field name="source_id"/>
                 <field name="connector_code"/>
+                <field name="schedule_enabled"/>
+                <field name="last_run_at"/>
+                <field name="last_success_at"/>
                 <field name="owner_id"/>
                 <field name="document_count"/>
                 <field name="active" column_invisible="True"/>
@@ -31,6 +34,16 @@
         <field name="model">legal.watch</field>
         <field name="arch" type="xml">
             <form string="Legal Watch">
+                <header>
+                    <button name="action_test_connection" type="object"
+                            string="Test Connection"
+                            invisible="connector_code == 'manual'"
+                            groups="legal_knowledge_watch.group_legal_watch_manager"/>
+                    <button name="action_run_now" type="object"
+                            string="Run Now" class="oe_highlight"
+                            invisible="connector_code == 'manual'"
+                            groups="legal_knowledge_watch.group_legal_watch_manager"/>
+                </header>
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                     <div class="oe_button_box" name="button_box">
@@ -51,6 +64,42 @@
                             <field name="active"/>
                         </group>
                     </group>
+                    <group string="Scheduling" invisible="connector_code == 'manual'">
+                        <group>
+                            <field name="schedule_enabled"/>
+                            <field name="interval_minutes"/>
+                        </group>
+                        <group>
+                            <field name="last_run_at" readonly="1"/>
+                            <field name="last_success_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook invisible="connector_code == 'manual'">
+                        <page string="Configuration" invisible="connector_code == 'manual'">
+                            <p class="text-muted" invisible="connector_code != 'rss'">
+                                RSS connector JSON schema: {"feed_url": "https://...",
+                                "fetch_linked_content": false, "allowed_domains": ["example.org"],
+                                "max_items_per_run": 50, "request_timeout_seconds": 20}
+                            </p>
+                            <field name="configuration_json" nolabel="1"/>
+                        </page>
+                        <page string="Relevance Rules">
+                            <field name="rule_ids">
+                                <list string="Relevance Rules" editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="active"/>
+                                    <field name="rule_type"/>
+                                    <field name="target_field"/>
+                                    <field name="operator"/>
+                                    <field name="value"/>
+                                    <field name="effect"/>
+                                    <field name="score_delta" invisible="effect != 'score'"/>
+                                    <field name="tag_id" invisible="effect != 'tag'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                     <group string="Notes">
                         <field name="notes" nolabel="1"/>
                     </group>

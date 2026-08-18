@@ -8,6 +8,9 @@ access_legal_tag_admin,legal.tag admin,model_legal_tag,group_legal_watch_adminis
 access_legal_watch_user,legal.watch user,model_legal_watch,group_legal_watch_user,1,0,0,0
 access_legal_watch_manager,legal.watch manager,model_legal_watch,group_legal_watch_manager,1,1,1,0
 access_legal_watch_admin,legal.watch admin,model_legal_watch,group_legal_watch_administrator,1,1,1,1
+access_legal_watch_rule_user,legal.watch.rule user,model_legal_watch_rule,group_legal_watch_user,1,0,0,0
+access_legal_watch_rule_manager,legal.watch.rule manager,model_legal_watch_rule,group_legal_watch_manager,1,1,1,0
+access_legal_watch_rule_admin,legal.watch.rule admin,model_legal_watch_rule,group_legal_watch_administrator,1,1,1,1
 access_legal_knowledge_document_user,legal.knowledge.document user,model_legal_knowledge_document,group_legal_watch_user,1,0,1,0
 access_legal_knowledge_document_reviewer,legal.knowledge.document reviewer,model_legal_knowledge_document,group_legal_watch_reviewer,1,1,1,0
 access_legal_knowledge_document_admin,legal.knowledge.document admin,model_legal_knowledge_document,group_legal_watch_administrator,1,1,1,1

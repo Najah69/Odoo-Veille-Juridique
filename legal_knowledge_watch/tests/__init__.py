@@ -3,3 +3,6 @@ from . import test_deduplication
 from . import test_document_lifecycle
 from . import test_manual_import_wizard
 from . import test_multicompany
+from . import test_rss_connector
+from . import test_relevance_service
+from . import test_watch_ingestion

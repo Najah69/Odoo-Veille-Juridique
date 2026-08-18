@@ -243,6 +243,7 @@ class LegalKnowledgeDocument(models.Model):
             "language": candidate.get("language") or "fr_FR",
             "status": candidate.get("default_status") or "new",
             "needs_review": bool(candidate.get("needs_review")),
+            "relevance_score": candidate.get("relevance_score") or 0.0,
             "content_hash": content_hash,
             "source_metadata_json": candidate.get("source_metadata_json") or False,
             "tag_ids": [(6, 0, candidate.get("tag_ids") or [])],
@@ -281,6 +282,7 @@ class LegalKnowledgeDocument(models.Model):
         document.write({
             "content_hash": content_hash,
             "last_checked_at": fields.Datetime.now(),
+            "relevance_score": candidate.get("relevance_score", document.relevance_score),
         })
         document.message_post(
             body=self.env._(

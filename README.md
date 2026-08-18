@@ -8,36 +8,42 @@ a locally-owned document history.
 > tax or accounting advice, and it does not replace consultation with a
 > qualified lawyer, accountant or other professional.**
 
-## Status: Phase 0 (foundation)
+## Status: Phase 1 (RSS/Atom + relevance rules)
 
-This first version implements the foundation only:
-
-- Manual import (file upload or pasted text) — **no network connector yet**.
+- Manual import (file upload or pasted text).
+- **RSS/Atom connector**: conditional GET (ETag/Last-Modified), bounded
+  retries, domain whitelist, never scrapes a linked article by default.
+- **Deterministic relevance rules** (keyword/regex/source-field →
+  include/exclude/score/tag/requires_review), evaluated before ingestion.
+- Scheduled fetch cron with a PostgreSQL-row-lock guard against concurrent
+  runs of the same watch (see `docs/connectors.md`).
 - Normalization, SHA-256 content hashing, deduplication, version history.
 - Document review workflow (`new → qualified → review → approved/rejected →
   archived/superseded`).
 - Multi-company record rules and role-based access control.
 - Storage via `ir.attachment` (no dependency on OCA DMS).
 
-RSS/Atom, Légifrance/PISTE, OCA DMS storage and AI-assisted qualification are
-planned in later phases and are **not** part of this version. See
-`CHANGELOG.md` for exactly what is implemented today.
+Légifrance/PISTE, OCA DMS storage and AI-assisted qualification are planned
+in later phases and are **not** part of this version. See `CHANGELOG.md` for
+exactly what is implemented today.
 
 ## Compatibility
 
 - Odoo 18.0 Community.
 - Python 3.12.
-- Dependencies: `base`, `mail` (core Odoo only). `beautifulsoup4` is used for
-  HTML normalization; `PyPDF2` is used opportunistically for PDF text
-  extraction if it is installed — if it is not, the original PDF is still
-  kept as an attachment and the document is flagged for human review instead
-  of failing the import.
+- Dependencies: `base`, `mail` (core Odoo only). External Python packages:
+  `requests`, `feedparser`, `bs4` (beautifulsoup4) — declared in the
+  manifest's `external_dependencies`, so the module refuses to install if
+  any is missing. `PyPDF2` is used opportunistically for PDF text
+  extraction in the manual-import wizard if it is installed — if it is not,
+  the original PDF is still kept as an attachment and the document is
+  flagged for human review instead of failing the import.
 
 ## Installation
 
 1. Copy `legal_knowledge_watch/` into your Odoo addons path.
-2. Install `beautifulsoup4` in the Odoo Python environment if it is not
-   already present (`pip install beautifulsoup4`).
+2. Install the required Python packages in the Odoo environment if not
+   already present: `pip install requests feedparser beautifulsoup4`.
 3. Update the apps list and install **Legal Knowledge Watch**.
 
 No OCA module and no external API credentials are required for this phase.
@@ -53,6 +59,9 @@ No OCA module and no external API credentials are required for this phase.
    different content). Re-importing identical content is a no-op.
 4. Move the document through the review workflow from its status bar
    (`Reviewer` role or above).
+
+For an RSS watch instead, see `docs/operations.md` ("Adding a new RSS watch
+— minimal example") and the connector/rule contract in `docs/connectors.md`.
 
 ## Architecture in one paragraph
 
@@ -91,8 +100,8 @@ From an Odoo 18 environment with this module on the addons path:
 odoo --test-enable --stop-after-init -i legal_knowledge_watch -d <test_db>
 ```
 
-All tests run offline: there is no network connector in this phase, so
-nothing in the test suite makes an HTTP call.
+All tests run offline: every RSS test mocks `requests.get` — the suite never
+makes a real HTTP call.
 
 ## License
 

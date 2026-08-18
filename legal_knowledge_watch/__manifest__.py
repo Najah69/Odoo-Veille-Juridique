@@ -14,10 +14,12 @@ This module is a documentation and monitoring tool. It does not provide
 legal, tax or accounting advice, and does not replace consultation with a
 qualified professional.
 
-Phase 0 (this version): manual import only. No network connector, no AI, no
-dependency on OCA DMS. Content is stored via ir.attachment.
+Phase 0: manual import (file upload or pasted text), no network connector.
+Phase 1 (this version): adds an RSS/Atom connector, deterministic relevance
+rules and a scheduled fetch cron. No AI, no dependency on OCA DMS. Content
+is stored via ir.attachment.
     """,
-    "version": "18.0.1.0.0",
+    "version": "18.0.2.0.0",
     "category": "Tools",
     "author": "Chapeau Blanc Group, Community Contributors",
     "website": "https://github.com/Najah69/odoo-legal-knowledge-watch",
@@ -26,11 +28,15 @@ dependency on OCA DMS. Content is stored via ir.attachment.
         "base",
         "mail",
     ],
+    "external_dependencies": {
+        "python": ["requests", "feedparser", "bs4"],
+    },
     "data": [
         "security/security.xml",
         "security/ir.model.access.csv",
         "data/legal_sequence.xml",
         "data/legal_tags.xml",
+        "data/ir_cron.xml",
         "views/legal_source_views.xml",
         "views/legal_tag_views.xml",
         "views/legal_watch_views.xml",

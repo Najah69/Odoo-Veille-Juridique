@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Exemple Atom</title>
+  <id>urn:exemple:atom-feed</id>
+  <updated>2026-08-17T10:00:00Z</updated>
+  <entry>
+    <title>Circulaire de test Atom</title>
+    <link href="https://exemple.gouv.example.org/circulaire-atom-1"/>
+    <id>urn:exemple:circulaire-atom-1</id>
+    <updated>2026-08-17T09:00:00Z</updated>
+    <summary>Résumé de la circulaire de test au format Atom.</summary>
+  </entry>
+</feed>

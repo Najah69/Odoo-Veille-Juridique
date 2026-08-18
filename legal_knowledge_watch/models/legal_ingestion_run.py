@@ -41,6 +41,12 @@ class LegalIngestionRun(models.Model):
     created_count = fields.Integer(string="Documents Created", default=0)
     updated_count = fields.Integer(string="Versions Created", default=0)
     duplicate_count = fields.Integer(string="Duplicates Ignored", default=0)
+    filtered_count = fields.Integer(
+        string="Filtered by Rules", default=0,
+        help="Candidates excluded by a relevance rule before ingestion "
+             "(distinct from duplicates: these were never even compared "
+             "against existing documents).",
+    )
     error_count = fields.Integer(string="Errors", default=0)
     log_excerpt = fields.Text(
         string="Diagnostics",

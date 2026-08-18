@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Exemple Officiel</title>
+    <link>https://exemple.gouv.example.org</link>
+    <description>Flux de test</description>
+    <item>
+      <title>Décret n° 2026-100 relatif aux tests</title>
+      <link>https://exemple.gouv.example.org/decret-2026-100</link>
+      <guid>urn:exemple:decret-2026-100</guid>
+      <pubDate>Mon, 17 Aug 2026 10:00:00 GMT</pubDate>
+      <description>&lt;p&gt;Résumé du &lt;b&gt;décret&lt;/b&gt; de test.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Arrêté sans date de publication</title>
+      <link>https://exemple.gouv.example.org/arrete-sans-date</link>
+      <guid>urn:exemple:arrete-sans-date</guid>
+      <description>Contenu sans date de publication.</description>
+    </item>
+    <item>
+      <title>Item sans lien (malformé)</title>
+      <guid isPermaLink="false">urn:exemple:item-sans-lien</guid>
+      <description>Cet item n'a pas de balise link et doit être ignoré.</description>
+    </item>
+  </channel>
+</rss>

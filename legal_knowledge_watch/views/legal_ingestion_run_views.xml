@@ -18,6 +18,7 @@
                 <field name="created_count"/>
                 <field name="updated_count"/>
                 <field name="duplicate_count"/>
+                <field name="filtered_count"/>
                 <field name="error_count"/>
             </list>
         </field>
@@ -46,6 +47,7 @@
                         <field name="created_count"/>
                         <field name="updated_count"/>
                         <field name="duplicate_count"/>
+                        <field name="filtered_count"/>
                         <field name="error_count"/>
                     </group>
                     <group string="Diagnostics">
