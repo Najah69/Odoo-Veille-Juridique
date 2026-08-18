@@ -8,7 +8,7 @@ a locally-owned document history.
 > tax or accounting advice, and it does not replace consultation with a
 > qualified lawyer, accountant or other professional.**
 
-## Status: Phase 3 (Légifrance/PISTE)
+## Status: Phase 4 (agnostic AI/export providers)
 
 - Manual import (file upload or pasted text).
 - **RSS/Atom connector**: conditional GET (ETag/Last-Modified), bounded
@@ -25,13 +25,19 @@ a locally-owned document history.
 - **Optional OCA DMS storage backend**, selectable per watch/import
   (`auto`/`dms`/`attachment`) — never a hard dependency; see
   `docs/oca-dms-integration.md`.
+- **Agnostic AI/export provider layer** (`legal.ai.provider`/`legal.ai.job`/
+  `legal.document.enrichment`): a generic `webhook` provider plus an
+  `ai_brain_http` provider implementing this project's own documented HTTP
+  contract. AI never overrides a human decision — classification only ever
+  sets a "needs review" flag, and export only ever runs for approved,
+  current, non-empty, primary/high-trust documents, policy re-checked
+  fresh on every job attempt. See `docs/ai-providers.md`.
 - Normalization, SHA-256 content hashing, deduplication, version history.
 - Document review workflow (`new → qualified → review → approved/rejected →
   archived/superseded`).
 - Multi-company record rules and role-based access control.
 
-AI-assisted qualification is planned in a later phase and is **not** part
-of this version. See `CHANGELOG.md` for exactly what is implemented today.
+See `CHANGELOG.md` for exactly what is implemented today.
 
 ## Compatibility
 
@@ -72,7 +78,8 @@ For an RSS watch instead, see `docs/operations.md` ("Adding a new RSS watch
 — minimal example") and the connector/rule contract in `docs/connectors.md`.
 For a Légifrance/PISTE watch, see `docs/legifrance-piste.md`. To store
 content in OCA DMS instead of `ir.attachment`, see
-`docs/oca-dms-integration.md`.
+`docs/oca-dms-integration.md`. To classify documents with AI or export
+approved ones to a RAG/vector-store service, see `docs/ai-providers.md`.
 
 ## Architecture in one paragraph
 
@@ -90,9 +97,10 @@ safe, idempotent no-op instead of creating clutter.
 ## Security & data
 
 - Manual import, RSS and OCA DMS need no secrets at all. Légifrance/PISTE
-  needs OAuth2 credentials, read via environment variables (preferred) or
-  system parameters — never committed, never displayed in the UI, never
-  logged. See `docs/legifrance-piste.md`.
+  and any AI/export provider using bearer or header auth need a token,
+  read via environment variables (preferred) or system parameters — never
+  committed, never displayed in the UI, never logged. See
+  `docs/legifrance-piste.md` and `docs/ai-providers.md`.
 - Access is controlled by four groups (`User`, `Reviewer`, `Manager`,
   `Administrator`) and company-scoped record rules.
 - Document deletion (`unlink`) is restricted to `Administrator`; use
@@ -116,9 +124,9 @@ From an Odoo 18 environment with this module on the addons path:
 odoo --test-enable --stop-after-init -i legal_knowledge_watch -d <test_db>
 ```
 
-All tests run offline: every RSS/Légifrance test mocks the `requests` calls
-(including the OAuth token request) — the suite never makes a real HTTP
-call.
+All tests run offline: every RSS/Légifrance/AI-provider test mocks the
+`requests` calls (including the OAuth token request) — the suite never
+makes a real HTTP call.
 
 ## License
 

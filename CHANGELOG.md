@@ -2,6 +2,61 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [18.0.5.0.0] - Unreleased — Phase 4
+
+### Added
+- Agnostic AI/export provider layer. `services/ai_provider_base.py`
+  (`BaseAIProvider`) + `services/ai_provider_registry.py` dispatch by
+  `provider_type` — the job pipeline never imports a specific provider,
+  matching the connector pattern from earlier phases.
+- `services/generic_webhook_provider.py`: minimal reference
+  implementation (single URL, `{"action": ...}` JSON body) for a
+  contributor building a new provider.
+- `services/ai_brain_provider.py`: implements this project's own
+  documented HTTP contract (`docs/ai-providers.md`) — healthcheck
+  (GET `/api/v1/legal-knowledge/health`), classify (POST `.../classify`
+  with `X-Legal-Knowledge-Schema: 1.0`), upsert (PUT
+  `.../documents/{reference}` with `Idempotency-Key: <content_hash>`),
+  delete (DELETE `.../documents/{reference}`). This contract is this
+  project's own design, not an external API — no grounding research
+  needed, unlike Légifrance/OCA DMS in earlier phases.
+- `services/http_retry.py`: shared bounded-retry HTTP helper (429/5xx/
+  network errors retried with backoff, other 4xx not retried) used by
+  both providers.
+- `legal.ai.provider`, `legal.ai.job`, `legal.document.enrichment` models.
+  Jobs: `pending → running → done`, `→ retry → ...` (backoff, capped at 5
+  attempts) `→ failed`, or straight to `cancelled` (export blocked by
+  policy) / `failed` (classify response fails schema validation) — both
+  terminal, no pointless retry of an outcome retrying can't change.
+- `services/enrichment_schema.py` + `docs/legal-enrichment-schema-1.0.json`:
+  hand-rolled JSON Schema validator for `legal-enrichment-1.0` (no
+  `jsonschema` dependency added). A schema violation never silently
+  mutates document metadata — the job fails and a `state=failed`
+  enrichment records why, for audit.
+- `legal.knowledge.document.export_state`
+  (not_requested/queued/exported/failed/blocked),
+  `_check_export_policy()` (approved + current + non-empty text +
+  primary/high trust_level), re-checked fresh on every job attempt, not
+  frozen at approval time. A blocked export never calls the provider.
+- `_ingest_candidate`'s existing per-item savepoint pattern extended: job
+  processing wraps each attempt in its own savepoint too, but
+  policy-blocked/schema-invalid outcomes are handled *outside* that
+  savepoint (via `ExportBlockedError`/`SchemaValidationError`) so the
+  audit-trail record and the final state both survive the rollback of the
+  failed attempt itself.
+- `services/ai_prompts.py`: two versioned prompt templates
+  (`legal_summary_classification_fr_v1`, `legal_business_impact_fr_v1`),
+  French, explicitly forbidding personalized legal advice. Only the first
+  is wired into an automatic job type this phase — see
+  `docs/ai-providers.md` for why the second isn't yet.
+- Test suite: schema validator (valid/invalid payloads), both providers
+  (healthcheck/classify/export/delete, timeout/429/401/invalid-JSON/
+  retry/idempotency-key), job orchestration (classify success, schema
+  failure with audit trail, export blocked for non-approved/low-trust
+  documents with the provider never called, export success, transient
+  failure retry/backoff, max-attempts exhaustion, cron batch selection) —
+  entirely offline.
+
 ## [18.0.4.0.0] - Unreleased — Phase 3
 
 ### Added

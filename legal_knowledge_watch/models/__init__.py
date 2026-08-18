@@ -5,4 +5,7 @@ from . import legal_watch_rule
 from . import legal_ingestion_run
 from . import legal_document_version
 from . import legal_dms_directory_route
+from . import legal_ai_provider
+from . import legal_ai_job
+from . import legal_document_enrichment
 from . import legal_knowledge_document

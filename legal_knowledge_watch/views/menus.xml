@@ -22,6 +22,14 @@
               parent="menu_legal_knowledge_watch_root"
               action="action_legal_ingestion_run" sequence="30"/>
 
+    <menuitem id="menu_legal_ai_job" name="AI Jobs"
+              parent="menu_legal_knowledge_watch_root"
+              action="action_legal_ai_job" sequence="40"/>
+
+    <menuitem id="menu_legal_document_enrichment" name="Enrichments"
+              parent="menu_legal_knowledge_watch_root"
+              action="action_legal_document_enrichment" sequence="50"/>
+
     <menuitem id="menu_legal_configuration" name="Configuration"
               parent="menu_legal_knowledge_watch_root" sequence="90"/>
 
@@ -36,5 +44,9 @@
     <menuitem id="menu_legal_dms_directory_route" name="DMS Directory Routing"
               parent="menu_legal_configuration"
               action="action_legal_dms_directory_route" sequence="30"/>
+
+    <menuitem id="menu_legal_ai_provider" name="AI/Export Providers"
+              parent="menu_legal_configuration"
+              action="action_legal_ai_provider" sequence="40"/>
 
 </odoo>

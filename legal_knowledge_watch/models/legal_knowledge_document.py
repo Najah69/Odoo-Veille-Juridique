@@ -1,3 +1,6 @@
+import json
+import uuid
+
 from odoo import api, fields, models
 
 from ..services import deduplication_service, normalize_service, storage_service
@@ -120,6 +123,25 @@ class LegalKnowledgeDocument(models.Model):
     )
     active = fields.Boolean(string="Active", default=True)
 
+    export_state = fields.Selection(
+        selection=[
+            ("not_requested", "Not Requested"),
+            ("queued", "Queued"),
+            ("exported", "Exported"),
+            ("failed", "Failed"),
+            ("blocked", "Blocked"),
+        ],
+        string="Export State", required=True, default="not_requested",
+    )
+    enrichment_ids = fields.One2many(
+        comodel_name="legal.document.enrichment", inverse_name="document_id",
+        string="Enrichments",
+    )
+    ai_job_ids = fields.One2many(
+        comodel_name="legal.ai.job", inverse_name="document_id",
+        string="AI Jobs",
+    )
+
     _sql_constraints = [
         (
             "legal_document_external_source_unique",
@@ -161,6 +183,7 @@ class LegalKnowledgeDocument(models.Model):
         for document in self:
             document._check_transition("approved")
             document.status = "approved"
+            document._queue_export_jobs()
 
     def action_reject(self):
         for document in self:
@@ -200,6 +223,130 @@ class LegalKnowledgeDocument(models.Model):
                 },
             }
         return action
+
+    def action_request_ai_classification(self):
+        """Manual trigger: queue a classify job for every provider enabled
+        for classification. Classification is opt-in/manual in this phase
+        (unlike export, which auto-queues on approval) — see
+        docs/ai-providers.md.
+        """
+        providers = self.env["legal.ai.provider"].search([
+            ("active", "=", True), ("enabled_for_classification", "=", True),
+        ])
+        job_model = self.env["legal.ai.job"]
+        for document in self:
+            for provider in providers:
+                job_model.create({
+                    "document_id": document.id,
+                    "provider_id": provider.id,
+                    "job_type": "classify",
+                })
+
+    def _queue_export_jobs(self):
+        """Called on approval. Always creates the job (so the export
+        policy — trust_level/is_current/non-empty text — is re-checked
+        fresh when the job actually runs, not frozen at approval time);
+        export_state is set to 'queued' immediately so the UI reflects
+        that *something* is pending even before the cron picks it up.
+        """
+        providers = self.env["legal.ai.provider"].search([
+            ("active", "=", True), ("enabled_for_export", "=", True),
+        ])
+        if not providers:
+            return
+        job_model = self.env["legal.ai.job"]
+        for document in self:
+            for provider in providers:
+                job_model.create({
+                    "document_id": document.id,
+                    "provider_id": provider.id,
+                    "job_type": "export",
+                })
+            document.export_state = "queued"
+
+    def _check_export_policy(self):
+        """Fail-closed export policy: approved, current, non-empty text,
+        source trust_level primary/high. Returns (allowed: bool,
+        reason: str|None).
+        """
+        self.ensure_one()
+        if self.status != "approved":
+            return False, "document status is not 'approved'"
+        if not self.is_current:
+            return False, "document is not the current one (superseded)"
+        if not (self.current_version_text or "").strip():
+            return False, "document has no normalized text"
+        if self.source_id.trust_level not in ("primary", "high"):
+            return False, (
+                f"source trust_level '{self.source_id.trust_level}' is not "
+                f"'primary' or 'high'"
+            )
+        return True, None
+
+    def _build_ai_classify_payload(self):
+        self.ensure_one()
+        return {
+            "request_id": str(uuid.uuid4()),
+            "document": {
+                "local_id": self.id,
+                "reference": self.reference,
+                "title": self.name,
+                "canonical_url": self.canonical_url,
+                "source": {
+                    "code": self.source_id.code,
+                    "name": self.source_id.name,
+                    "trust_level": self.source_id.trust_level,
+                },
+                "published_at": self.published_at.isoformat() if self.published_at else None,
+                "effective_at": None,
+                "document_type": self.document_type,
+                "content_hash": f"sha256:{self.content_hash}" if self.content_hash else None,
+                "plain_text": self.current_version_text or "",
+                "metadata": {
+                    "authority": self.authority,
+                    "jurisdiction": self.jurisdiction,
+                },
+            },
+            "policy": {
+                "locale": "fr_FR",
+                "require_json_schema": "legal-enrichment-1.0",
+                "allow_legal_advice": False,
+            },
+        }
+
+    def _build_ai_export_payload(self):
+        self.ensure_one()
+        try:
+            source_metadata = json.loads(self.source_metadata_json or "{}")
+        except (TypeError, ValueError):
+            source_metadata = {}
+        return {
+            "schema_version": "1.0",
+            "reference": self.reference,
+            "content_hash": f"sha256:{self.content_hash}" if self.content_hash else None,
+            "status": self.status,
+            "title": self.name,
+            "text": self.current_version_text or "",
+            "metadata": {
+                "source_url": self.source_url,
+                "canonical_url": self.canonical_url,
+                "source_name": self.source_id.name,
+                "trust_level": self.source_id.trust_level,
+                "published_at": self.published_at.isoformat() if self.published_at else None,
+                "effective_at": None,
+                "document_type": self.document_type,
+                "themes": [],
+                "tags": self.tag_ids.mapped("name"),
+                "jurisdiction": self.jurisdiction,
+                "language": self.language,
+                "odoo_document_id": self.id,
+            },
+            "provenance": {
+                "collected_at": self.collected_at.isoformat() if self.collected_at else None,
+                "version": self.current_version_id.sequence if self.current_version_id else None,
+                "source_metadata": source_metadata,
+            },
+        }
 
     @api.model
     def _ingest_candidate(self, candidate):

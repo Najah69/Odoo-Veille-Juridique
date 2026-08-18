@@ -40,6 +40,9 @@
                     <button name="action_archive_document" type="object" string="Archive"
                             invisible="status not in ('approved', 'rejected', 'superseded')"
                             groups="legal_knowledge_watch.group_legal_watch_reviewer"/>
+                    <button name="action_request_ai_classification" type="object"
+                            string="Request AI Classification"
+                            groups="legal_knowledge_watch.group_legal_watch_reviewer"/>
                     <field name="status" widget="statusbar"
                            statusbar_visible="new,qualified,review,approved"/>
                 </header>
@@ -108,6 +111,32 @@
                             <button name="action_open_in_dms" type="object"
                                     string="Open in DMS"
                                     invisible="storage_backend != 'dms'"/>
+                        </page>
+                        <page string="AI-Brain">
+                            <group>
+                                <field name="export_state"/>
+                            </group>
+                            <separator string="AI Jobs"/>
+                            <field name="ai_job_ids" readonly="1">
+                                <list>
+                                    <field name="provider_id"/>
+                                    <field name="job_type"/>
+                                    <field name="state"/>
+                                    <field name="attempt_count"/>
+                                    <field name="last_error"/>
+                                </list>
+                            </field>
+                            <separator string="Enrichments"/>
+                            <field name="enrichment_ids" readonly="1">
+                                <list>
+                                    <field name="kind"/>
+                                    <field name="provider_id"/>
+                                    <field name="prompt_version"/>
+                                    <field name="state"/>
+                                    <field name="confidence"/>
+                                    <field name="create_date"/>
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>

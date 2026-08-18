@@ -20,12 +20,19 @@ cron.
 Phase 2: optional OCA DMS storage backend, selectable per watch/import
 (auto/dms/attachment). OCA DMS is never a hard dependency — the module
 installs and works fully with the ir.attachment fallback alone.
-Phase 3 (this version): Légifrance/PISTE connector (LODA collection —
-lois, ordonnances, décrets, arrêtés). See docs/legifrance-piste.md for
-exactly what was verified against real sources vs. what still needs
-checking against a live PISTE sandbox account. No AI yet.
+Phase 3: Légifrance/PISTE connector (LODA collection — lois, ordonnances,
+décrets, arrêtés). See docs/legifrance-piste.md for exactly what was
+verified against real sources vs. what still needs checking against a
+live PISTE sandbox account.
+Phase 4 (this version): agnostic AI/export provider layer. The core never
+imports a specific provider — AI-Brain (a generic HTTP contract, see
+docs/ai-providers.md) is one provider_type among others, alongside a
+minimal generic webhook provider. AI never overrides human decisions:
+classification results only ever set a "needs review" flag, and export to
+any provider only ever happens for approved, current, non-empty,
+primary/high-trust documents — enforced by policy, not by convention.
     """,
-    "version": "18.0.4.0.0",
+    "version": "18.0.5.0.0",
     "category": "Tools",
     "author": "Chapeau Blanc Group, Community Contributors",
     "website": "https://github.com/Najah69/odoo-legal-knowledge-watch",
@@ -50,6 +57,8 @@ checking against a live PISTE sandbox account. No AI yet.
         "views/legal_document_views.xml",
         "views/legal_ingestion_run_views.xml",
         "views/legal_dms_directory_route_views.xml",
+        "views/legal_ai_provider_views.xml",
+        "views/legal_ai_job_views.xml",
         "wizard/legal_manual_import_wizard_views.xml",
         "views/menus.xml",
     ],

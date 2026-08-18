@@ -9,3 +9,10 @@ from . import legifrance_connector
 from . import relevance_service
 from . import storage_service
 from . import storage_dms
+from . import enrichment_schema
+from . import ai_prompts
+from . import http_retry
+from . import ai_provider_base
+from . import ai_provider_registry
+from . import generic_webhook_provider
+from . import ai_brain_provider

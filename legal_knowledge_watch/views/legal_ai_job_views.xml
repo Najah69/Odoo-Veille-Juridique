@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_legal_ai_job_list" model="ir.ui.view">
+        <field name="name">legal.ai.job.list</field>
+        <field name="model">legal.ai.job</field>
+        <field name="arch" type="xml">
+            <list string="AI Jobs" create="false"
+                  decoration-danger="state == 'failed'"
+                  decoration-warning="state == 'retry'"
+                  decoration-muted="state == 'cancelled'"
+                  decoration-success="state == 'done'">
+                <field name="document_id"/>
+                <field name="provider_id"/>
+                <field name="job_type"/>
+                <field name="state"/>
+                <field name="attempt_count"/>
+                <field name="next_attempt_at"/>
+                <field name="last_error"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_legal_ai_job_form" model="ir.ui.view">
+        <field name="name">legal.ai.job.form</field>
+        <field name="model">legal.ai.job</field>
+        <field name="arch" type="xml">
+            <form string="AI Job" create="false">
+                <header>
+                    <button name="action_retry_now" type="object" string="Retry Now"
+                            invisible="state not in ('failed', 'retry')"
+                            class="oe_highlight"
+                            groups="legal_knowledge_watch.group_legal_watch_reviewer"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="document_id"/>
+                            <field name="provider_id"/>
+                            <field name="job_type"/>
+                        </group>
+                        <group>
+                            <field name="attempt_count"/>
+                            <field name="next_attempt_at"/>
+                            <field name="remote_id"/>
+                        </group>
+                    </group>
+                    <group string="Last Error">
+                        <field name="last_error" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_legal_ai_job" model="ir.actions.act_window">
+        <field name="name">AI Jobs</field>
+        <field name="res_model">legal.ai.job</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_legal_document_enrichment_list" model="ir.ui.view">
+        <field name="name">legal.document.enrichment.list</field>
+        <field name="model">legal.document.enrichment</field>
+        <field name="arch" type="xml">
+            <list string="Enrichments" create="false"
+                  decoration-danger="state == 'failed'"
+                  decoration-warning="state == 'needs_review'">
+                <field name="document_id"/>
+                <field name="kind"/>
+                <field name="provider_id"/>
+                <field name="prompt_version"/>
+                <field name="state"/>
+                <field name="confidence"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_legal_document_enrichment_form" model="ir.ui.view">
+        <field name="name">legal.document.enrichment.form</field>
+        <field name="model">legal.document.enrichment</field>
+        <field name="arch" type="xml">
+            <form string="Enrichment" create="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="document_id"/>
+                            <field name="kind"/>
+                            <field name="provider_id"/>
+                            <field name="state"/>
+                        </group>
+                        <group>
+                            <field name="model_identifier"/>
+                            <field name="prompt_version"/>
+                            <field name="input_hash"/>
+                            <field name="confidence"/>
+                        </group>
+                    </group>
+                    <group string="Output (JSON)">
+                        <field name="output_json" nolabel="1"/>
+                    </group>
+                    <group string="Error" invisible="state != 'failed'">
+                        <field name="error_message" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_legal_document_enrichment" model="ir.actions.act_window">
+        <field name="name">Enrichments</field>
+        <field name="res_model">legal.document.enrichment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

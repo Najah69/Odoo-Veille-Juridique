@@ -22,3 +22,11 @@ access_legal_manual_import_wizard_user,legal.manual.import.wizard user,model_leg
 access_legal_dms_directory_route_user,legal.dms.directory.route user,model_legal_dms_directory_route,group_legal_watch_user,1,0,0,0
 access_legal_dms_directory_route_manager,legal.dms.directory.route manager,model_legal_dms_directory_route,group_legal_watch_manager,1,1,1,0
 access_legal_dms_directory_route_admin,legal.dms.directory.route admin,model_legal_dms_directory_route,group_legal_watch_administrator,1,1,1,1
+access_legal_ai_provider_user,legal.ai.provider user,model_legal_ai_provider,group_legal_watch_user,1,0,0,0
+access_legal_ai_provider_admin,legal.ai.provider admin,model_legal_ai_provider,group_legal_watch_administrator,1,1,1,1
+access_legal_ai_job_user,legal.ai.job user,model_legal_ai_job,group_legal_watch_user,1,0,0,0
+access_legal_ai_job_reviewer,legal.ai.job reviewer,model_legal_ai_job,group_legal_watch_reviewer,1,1,1,0
+access_legal_ai_job_admin,legal.ai.job admin,model_legal_ai_job,group_legal_watch_administrator,1,1,1,1
+access_legal_document_enrichment_user,legal.document.enrichment user,model_legal_document_enrichment,group_legal_watch_user,1,0,0,0
+access_legal_document_enrichment_reviewer,legal.document.enrichment reviewer,model_legal_document_enrichment,group_legal_watch_reviewer,1,1,1,0
+access_legal_document_enrichment_admin,legal.document.enrichment admin,model_legal_document_enrichment,group_legal_watch_administrator,1,1,1,1

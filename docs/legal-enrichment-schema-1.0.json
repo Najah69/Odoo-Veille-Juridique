@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "legal-enrichment-1.0",
+  "title": "Legal Knowledge Watch — AI enrichment output",
+  "description": "Strict schema for legal.document.enrichment.output_json. Mirrored by services/enrichment_schema.py (hand-rolled validator, no jsonschema dependency — keep both in sync). A schema violation must never silently mutate document metadata: it fails the job and/or flags the enrichment needs_review.",
+  "type": "object",
+  "required": [
+    "schema_version", "summary", "themes", "tags", "affected_audiences",
+    "obligations", "business_relevance", "requires_human_review",
+    "uncertainties", "citations"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "summary": {
+      "type": "string",
+      "description": "Neutral factual summary in French. Never legal advice."
+    },
+    "themes": {"type": "array", "items": {"type": "string"}},
+    "tags": {"type": "array", "items": {"type": "string"}},
+    "legal_nature": {"type": ["string", "null"]},
+    "effective_date": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "affected_audiences": {"type": "array", "items": {"type": "string"}},
+    "obligations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "certainty"],
+        "properties": {
+          "label": {"type": "string"},
+          "source_excerpt": {"type": "string"},
+          "certainty": {"enum": ["stated", "inferred", "uncertain"]}
+        }
+      }
+    },
+    "business_relevance": {
+      "type": "object",
+      "required": ["score_delta", "rationale"],
+      "properties": {
+        "score_delta": {"type": "integer"},
+        "rationale": {"type": "string"}
+      }
+    },
+    "requires_human_review": {"type": "boolean"},
+    "uncertainties": {"type": "array", "items": {"type": "string"}},
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["locator", "quote"],
+        "properties": {
+          "locator": {"type": "string"},
+          "quote": {"type": "string"}
+        }
+      }
+    }
+  }
+}
