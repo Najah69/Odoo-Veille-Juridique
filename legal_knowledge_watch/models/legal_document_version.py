@@ -21,7 +21,20 @@ class LegalDocumentVersion(models.Model):
     mime_type = fields.Char(string="Original MIME Type")
     attachment_id = fields.Many2one(
         comodel_name="ir.attachment", string="Original Content",
-        help="Original file/content as collected, stored as an attachment.",
+        help="Original file/content as collected, stored as an attachment. "
+             "Set only when storage_backend = 'attachment'.",
+    )
+    storage_backend = fields.Selection(
+        selection=[("attachment", "Attachment"), ("dms", "OCA DMS")],
+        string="Storage Backend", required=True, default="attachment",
+    )
+    dms_file_res_id = fields.Integer(
+        string="DMS File ID",
+        help="Numeric id of the dms.file record holding this version's "
+             "content. Deliberately a plain integer, not a Many2one: this "
+             "module must stay installable without OCA DMS, and a Many2one "
+             "would require the dms.file model to exist. Set only when "
+             "storage_backend = 'dms'.",
     )
     collected_at = fields.Datetime(
         string="Collected At", required=True, default=fields.Datetime.now,

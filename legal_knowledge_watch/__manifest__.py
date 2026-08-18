@@ -14,12 +14,15 @@ This module is a documentation and monitoring tool. It does not provide
 legal, tax or accounting advice, and does not replace consultation with a
 qualified professional.
 
-Phase 0: manual import (file upload or pasted text), no network connector.
-Phase 1 (this version): adds an RSS/Atom connector, deterministic relevance
-rules and a scheduled fetch cron. No AI, no dependency on OCA DMS. Content
-is stored via ir.attachment.
+Phase 0: manual import (file upload or pasted text).
+Phase 1: RSS/Atom connector, deterministic relevance rules, scheduled fetch
+cron.
+Phase 2 (this version): optional OCA DMS storage backend, selectable per
+watch/import (auto/dms/attachment). OCA DMS is never a hard dependency —
+the module installs and works fully with the ir.attachment fallback alone.
+No AI yet.
     """,
-    "version": "18.0.2.0.0",
+    "version": "18.0.3.0.0",
     "category": "Tools",
     "author": "Chapeau Blanc Group, Community Contributors",
     "website": "https://github.com/Najah69/odoo-legal-knowledge-watch",
@@ -42,6 +45,7 @@ is stored via ir.attachment.
         "views/legal_watch_views.xml",
         "views/legal_document_views.xml",
         "views/legal_ingestion_run_views.xml",
+        "views/legal_dms_directory_route_views.xml",
         "wizard/legal_manual_import_wizard_views.xml",
         "views/menus.xml",
     ],

@@ -23,6 +23,7 @@
                         <field name="language"/>
                         <field name="tag_ids" widget="many2many_tags"/>
                         <field name="review_state_choice"/>
+                        <field name="storage_mode"/>
                     </group>
                 </group>
                 <group>

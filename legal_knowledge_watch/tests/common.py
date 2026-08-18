@@ -22,6 +22,10 @@ class LegalWatchTransactionCase(TransactionCase):
             "document_type": "manual",
             "language": "fr_FR",
             "tag_ids": [],
+            "attachment_vals": {
+                "name": "test.txt", "datas": b"Y29udGVudA==", "mimetype": "text/plain",
+            },
+            "storage_mode": "auto",
         }
         candidate.update(overrides)
         return candidate

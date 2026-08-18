@@ -8,7 +8,7 @@ a locally-owned document history.
 > tax or accounting advice, and it does not replace consultation with a
 > qualified lawyer, accountant or other professional.**
 
-## Status: Phase 1 (RSS/Atom + relevance rules)
+## Status: Phase 2 (optional OCA DMS storage)
 
 - Manual import (file upload or pasted text).
 - **RSS/Atom connector**: conditional GET (ETag/Last-Modified), bounded
@@ -17,15 +17,17 @@ a locally-owned document history.
   include/exclude/score/tag/requires_review), evaluated before ingestion.
 - Scheduled fetch cron with a PostgreSQL-row-lock guard against concurrent
   runs of the same watch (see `docs/connectors.md`).
+- **Optional OCA DMS storage backend**, selectable per watch/import
+  (`auto`/`dms`/`attachment`) — never a hard dependency; see
+  `docs/oca-dms-integration.md`.
 - Normalization, SHA-256 content hashing, deduplication, version history.
 - Document review workflow (`new → qualified → review → approved/rejected →
   archived/superseded`).
 - Multi-company record rules and role-based access control.
-- Storage via `ir.attachment` (no dependency on OCA DMS).
 
-Légifrance/PISTE, OCA DMS storage and AI-assisted qualification are planned
-in later phases and are **not** part of this version. See `CHANGELOG.md` for
-exactly what is implemented today.
+Légifrance/PISTE and AI-assisted qualification are planned in later phases
+and are **not** part of this version. See `CHANGELOG.md` for exactly what
+is implemented today.
 
 ## Compatibility
 
@@ -62,17 +64,21 @@ No OCA module and no external API credentials are required for this phase.
 
 For an RSS watch instead, see `docs/operations.md` ("Adding a new RSS watch
 — minimal example") and the connector/rule contract in `docs/connectors.md`.
+To store content in OCA DMS instead of `ir.attachment`, see
+`docs/oca-dms-integration.md`.
 
 ## Architecture in one paragraph
 
 `legal.knowledge.document` is the business source of truth: it never mixes
-raw source content with any later analysis. Content itself lives in
-`legal.document.version` records (each pointing to an `ir.attachment` for the
-original file), so the full history of a document is kept even when it
-changes. Deduplication is checked in this order: `(source, external_id)`,
-then canonical URL within the same source, then content hash globally — this
-is what makes re-importing the same content a safe, idempotent no-op instead
-of creating clutter.
+raw source content with any later analysis, and it never hard-couples to a
+storage technology. Content itself lives in `legal.document.version`
+records, each pointing to wherever it was actually stored — an
+`ir.attachment` by default, or a `dms.file` if OCA DMS is installed and
+selected — so the full history of a document is kept even when it changes
+or the storage backend changes. Deduplication is checked in this order:
+`(source, external_id)`, then canonical URL within the same source, then
+content hash globally — this is what makes re-importing the same content a
+safe, idempotent no-op instead of creating clutter.
 
 ## Security & data
 

@@ -1,6 +1,6 @@
 from odoo import api, fields, models
 
-from ..services import deduplication_service, normalize_service
+from ..services import deduplication_service, normalize_service, storage_service
 
 # Allowed status transitions (see docs/architecture.md - document lifecycle).
 _ALLOWED_TRANSITIONS = {
@@ -100,7 +100,15 @@ class LegalKnowledgeDocument(models.Model):
     )
     attachment_id = fields.Many2one(
         comodel_name="ir.attachment", string="Current Attachment",
-        compute="_compute_current_version_id", store=True,
+        related="current_version_id.attachment_id", store=True, readonly=True,
+    )
+    storage_backend = fields.Selection(
+        related="current_version_id.storage_backend", store=True, readonly=True,
+        string="Storage Backend",
+    )
+    dms_file_res_id = fields.Integer(
+        related="current_version_id.dms_file_res_id", store=True, readonly=True,
+        string="DMS File ID",
     )
     current_version_text = fields.Text(
         string="Normalized Text",
@@ -125,12 +133,10 @@ class LegalKnowledgeDocument(models.Model):
         for document in self:
             document.version_count = len(document.version_ids)
 
-    @api.depends("version_ids.is_current", "version_ids.attachment_id")
+    @api.depends("version_ids.is_current")
     def _compute_current_version_id(self):
         for document in self:
-            current = document.version_ids.filtered("is_current")[:1]
-            document.current_version_id = current
-            document.attachment_id = current.attachment_id
+            document.current_version_id = document.version_ids.filtered("is_current")[:1]
 
     def _check_transition(self, target_status):
         self.ensure_one()
@@ -175,6 +181,25 @@ class LegalKnowledgeDocument(models.Model):
             "view_mode": "list,form",
             "domain": [("document_id", "=", self.id)],
         }
+
+    def action_open_in_dms(self):
+        self.ensure_one()
+        from ..services.storage_dms import DmsStorageBackend
+
+        backend = DmsStorageBackend(self.env)
+        action = backend.open_action(self.current_version_id) if backend.is_available() else None
+        if not action:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "type": "warning",
+                    "message": self.env._(
+                        "The current version of this document is not stored in DMS."
+                    ),
+                },
+            }
+        return action
 
     @api.model
     def _ingest_candidate(self, candidate):
@@ -227,63 +252,75 @@ class LegalKnowledgeDocument(models.Model):
             version = self._create_new_version(existing, candidate, plain_text, content_hash)
             return {"document": existing, "version": version, "result": "new_version"}
 
-        document = self.create({
-            "name": candidate["title"],
-            "source_id": candidate["source_id"],
-            "watch_id": candidate.get("watch_id"),
-            "external_id": candidate.get("external_id") or False,
-            "source_url": candidate.get("source_url") or False,
-            "canonical_url": canonical_url,
-            "published_at": candidate.get("published_at") or False,
-            "collected_at": fields.Datetime.now(),
-            "last_checked_at": fields.Datetime.now(),
-            "document_type": candidate.get("document_type") or "manual",
-            "authority": candidate.get("authority") or False,
-            "jurisdiction": candidate.get("jurisdiction") or "fr",
-            "language": candidate.get("language") or "fr_FR",
-            "status": candidate.get("default_status") or "new",
-            "needs_review": bool(candidate.get("needs_review")),
-            "relevance_score": candidate.get("relevance_score") or 0.0,
-            "content_hash": content_hash,
-            "source_metadata_json": candidate.get("source_metadata_json") or False,
-            "tag_ids": [(6, 0, candidate.get("tag_ids") or [])],
-        })
-        version = self.env["legal.document.version"].create({
-            "document_id": document.id,
-            "sequence": 1,
-            "content_hash": content_hash,
-            "plain_text": plain_text,
-            "mime_type": candidate.get("mime_type") or False,
-            "collected_at": fields.Datetime.now(),
-            "is_current": True,
-            "attachment_id": self._create_attachment(
-                document, candidate.get("attachment_vals")
-            ),
-        })
+        # Wrapped in a savepoint so a storage failure (e.g. storage_mode
+        # 'dms' requested without DMS installed) cannot leave an orphan
+        # document with zero versions: either both succeed, or neither does.
+        with self.env.cr.savepoint():
+            document = self.create({
+                "name": candidate["title"],
+                "source_id": candidate["source_id"],
+                "watch_id": candidate.get("watch_id"),
+                "external_id": candidate.get("external_id") or False,
+                "source_url": candidate.get("source_url") or False,
+                "canonical_url": canonical_url,
+                "published_at": candidate.get("published_at") or False,
+                "collected_at": fields.Datetime.now(),
+                "last_checked_at": fields.Datetime.now(),
+                "document_type": candidate.get("document_type") or "manual",
+                "authority": candidate.get("authority") or False,
+                "jurisdiction": candidate.get("jurisdiction") or "fr",
+                "language": candidate.get("language") or "fr_FR",
+                "status": candidate.get("default_status") or "new",
+                "needs_review": bool(candidate.get("needs_review")),
+                "relevance_score": candidate.get("relevance_score") or 0.0,
+                "content_hash": content_hash,
+                "source_metadata_json": candidate.get("source_metadata_json") or False,
+                "tag_ids": [(6, 0, candidate.get("tag_ids") or [])],
+            })
+            storage_vals = self._store_content(
+                document, candidate.get("attachment_vals"),
+                candidate.get("storage_mode", "auto"),
+            )
+            version = self.env["legal.document.version"].create({
+                "document_id": document.id,
+                "sequence": 1,
+                "content_hash": content_hash,
+                "plain_text": plain_text,
+                "mime_type": candidate.get("mime_type") or False,
+                "collected_at": fields.Datetime.now(),
+                "is_current": True,
+                **storage_vals,
+            })
         return {"document": document, "version": version, "result": "created"}
 
     def _create_new_version(self, document, candidate, plain_text, content_hash):
-        document.current_version_id.write({"is_current": False})
-        next_sequence = (max(document.version_ids.mapped("sequence")) + 1) if document.version_ids else 1
-        version = self.env["legal.document.version"].create({
-            "document_id": document.id,
-            "sequence": next_sequence,
-            "content_hash": content_hash,
-            "plain_text": plain_text,
-            "mime_type": candidate.get("mime_type") or False,
-            "collected_at": fields.Datetime.now(),
-            "source_updated_at": candidate.get("published_at") or False,
-            "change_summary": candidate.get("change_summary") or False,
-            "is_current": True,
-            "attachment_id": self._create_attachment(
-                document, candidate.get("attachment_vals")
-            ),
-        })
-        document.write({
-            "content_hash": content_hash,
-            "last_checked_at": fields.Datetime.now(),
-            "relevance_score": candidate.get("relevance_score", document.relevance_score),
-        })
+        with self.env.cr.savepoint():
+            document.current_version_id.write({"is_current": False})
+            next_sequence = (
+                max(document.version_ids.mapped("sequence")) + 1
+                if document.version_ids else 1
+            )
+            storage_vals = self._store_content(
+                document, candidate.get("attachment_vals"),
+                candidate.get("storage_mode", "auto"),
+            )
+            version = self.env["legal.document.version"].create({
+                "document_id": document.id,
+                "sequence": next_sequence,
+                "content_hash": content_hash,
+                "plain_text": plain_text,
+                "mime_type": candidate.get("mime_type") or False,
+                "collected_at": fields.Datetime.now(),
+                "source_updated_at": candidate.get("published_at") or False,
+                "change_summary": candidate.get("change_summary") or False,
+                "is_current": True,
+                **storage_vals,
+            })
+            document.write({
+                "content_hash": content_hash,
+                "last_checked_at": fields.Datetime.now(),
+                "relevance_score": candidate.get("relevance_score", document.relevance_score),
+            })
         document.message_post(
             body=self.env._(
                 "New version collected (previous version kept in history)."
@@ -291,12 +328,21 @@ class LegalKnowledgeDocument(models.Model):
         )
         return version
 
-    def _create_attachment(self, document, attachment_vals):
+    def _store_content(self, document, attachment_vals, storage_mode):
+        """Delegate to the configured storage backend (ir.attachment or
+        OCA DMS if installed and requested — see services/storage_service.py).
+        Returns legal.document.version field values (storage_backend +
+        backend-specific id field), defaulting the unused id field to False
+        so callers can always unpack the dict the same way.
+        """
         if not attachment_vals:
-            return False
-        attachment = self.env["ir.attachment"].create({
-            **attachment_vals,
-            "res_model": self._name,
-            "res_id": document.id,
-        })
-        return attachment.id
+            return {
+                "storage_backend": "attachment",
+                "attachment_id": False,
+                "dms_file_res_id": False,
+            }
+        backend = storage_service.get_backend(self.env, storage_mode)
+        result = backend.store(document, attachment_vals)
+        result.setdefault("attachment_id", False)
+        result.setdefault("dms_file_res_id", False)
+        return result

@@ -2,6 +2,44 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [18.0.3.0.0] - Unreleased — Phase 2
+
+### Added
+- Optional OCA DMS storage backend (`services/storage_dms.py`), selectable
+  per watch/manual-import via `storage_mode` (`auto`/`dms`/`attachment`).
+  `dms` is never a manifest dependency — availability is detected at
+  runtime (`"dms.file" in self.env`), and every `dms.*` field reference was
+  verified against the real OCA/dms 18.0 source before being written (see
+  `docs/oca-dms-integration.md` for the exact fields confirmed and what
+  still needs validating against a live install).
+- `services/storage_service.py`: backend dispatch (`get_backend`) with a
+  fail-closed policy — `storage_mode=dms` without DMS installed raises a
+  clear `LegalStorageError` (a `UserError`) instead of silently falling
+  back; `auto` prefers DMS when available; `attachment` always forces the
+  attachment backend regardless of DMS availability.
+- `legal.document.version.storage_backend`/`dms_file_res_id`: storage is
+  recorded **per version**, not per document, so switching a watch's
+  storage mode never rewrites history — only future versions use the new
+  backend. `dms_file_res_id` is a plain Integer (not a Many2one) so the
+  module stays installable without the `dms.file` model existing.
+  `legal.knowledge.document` exposes the same info as related/stored
+  fields for the current version, plus an "Open in DMS" button.
+  `_ingest_candidate`'s document-creation and new-version paths are now
+  wrapped in a savepoint each, so a storage failure can never leave an
+  orphan document with zero versions.
+- `legal.dms.directory.route`: routes a `legal.tag` (or none = default) +
+  company to a target `dms.directory` id. No DMS folder/tag id is ever
+  hardcoded in code — routing is purely admin-configured data, with a
+  single `ir.config_parameter` fallback
+  (`legal_knowledge_watch.dms_default_directory_id`) if no route matches.
+- Test suite: attachment fallback in `auto` mode (genuine, unmocked — this
+  environment never has DMS installed), `dms` mode's clean failure and
+  no-orphan guarantee, directory-routing precedence (tag-specific > default
+  > config-parameter fallback > clear error), and `DmsStorageBackend.store()`
+  exercised end to end with only the actual `dms.file` creation call
+  mocked (`_create_dms_file`) — per the "mock only what's genuinely
+  unavailable" policy from the blueprint.
+
 ## [18.0.2.0.0] - Unreleased — Phase 1
 
 ### Added

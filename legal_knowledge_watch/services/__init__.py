@@ -4,3 +4,5 @@ from . import base_connector
 from . import connector_registry
 from . import rss_connector
 from . import relevance_service
+from . import storage_service
+from . import storage_dms

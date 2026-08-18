@@ -33,4 +33,8 @@
               parent="menu_legal_configuration"
               action="action_legal_tag" sequence="20"/>
 
+    <menuitem id="menu_legal_dms_directory_route" name="DMS Directory Routing"
+              parent="menu_legal_configuration"
+              action="action_legal_dms_directory_route" sequence="30"/>
+
 </odoo>

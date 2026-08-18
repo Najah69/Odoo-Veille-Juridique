@@ -60,6 +60,14 @@ class LegalManualImportWizard(models.TransientModel):
         ],
         string="Initial Status", required=True, default="review",
     )
+    storage_mode = fields.Selection(
+        selection=[
+            ("auto", "Auto (DMS if installed, else Attachment)"),
+            ("dms", "OCA DMS (fails clearly if not installed)"),
+            ("attachment", "Attachment (always)"),
+        ],
+        string="Storage Mode", required=True, default="auto",
+    )
 
     @api.onchange("import_mode")
     def _onchange_import_mode(self):
@@ -155,6 +163,7 @@ class LegalManualImportWizard(models.TransientModel):
             "attachment_vals": attachment_vals,
             "needs_review": needs_review,
             "default_status": self.review_state_choice,
+            "storage_mode": self.storage_mode,
         }
 
         result = self.env["legal.knowledge.document"]._ingest_candidate(candidate)

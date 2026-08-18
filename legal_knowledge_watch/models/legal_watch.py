@@ -74,6 +74,15 @@ class LegalWatch(models.Model):
     # docs/connectors.md for the schema of each connector).
     configuration_json = fields.Text(string="Configuration (JSON)")
 
+    storage_mode = fields.Selection(
+        selection=[
+            ("auto", "Auto (DMS if installed, else Attachment)"),
+            ("dms", "OCA DMS (fails clearly if not installed)"),
+            ("attachment", "Attachment (always)"),
+        ],
+        string="Storage Mode", required=True, default="auto",
+    )
+
     rule_ids = fields.One2many(
         comodel_name="legal.watch.rule", inverse_name="watch_id",
         string="Relevance Rules",
@@ -192,6 +201,7 @@ class LegalWatch(models.Model):
             "needs_review": relevance["requires_review"],
             "default_status": "new",
             "relevance_score": relevance["score"],
+            "storage_mode": self.storage_mode,
         }
 
     def _run_ingestion(self, trigger="manual"):

@@ -97,6 +97,18 @@
                         <page string="Metadata">
                             <field name="source_metadata_json" nolabel="1"/>
                         </page>
+                        <page string="Storage">
+                            <group>
+                                <field name="storage_backend"/>
+                                <field name="attachment_id" readonly="1"
+                                       invisible="storage_backend != 'attachment'"/>
+                                <field name="dms_file_res_id" readonly="1"
+                                       invisible="storage_backend != 'dms'"/>
+                            </group>
+                            <button name="action_open_in_dms" type="object"
+                                    string="Open in DMS"
+                                    invisible="storage_backend != 'dms'"/>
+                        </page>
                     </notebook>
                 </sheet>
                 <chatter/>
