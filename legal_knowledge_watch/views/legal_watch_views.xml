@@ -82,6 +82,13 @@
                                 "fetch_linked_content": false, "allowed_domains": ["example.org"],
                                 "max_items_per_run": 50, "request_timeout_seconds": 20}
                             </p>
+                            <p class="text-muted" invisible="connector_code != 'legifrance'">
+                                Légifrance/PISTE JSON schema: {"environment": "sandbox",
+                                "keywords": ["cotisations", "contrat de travail"],
+                                "natures": ["DECRET", "ARRETE"], "max_items_per_run": 20,
+                                "lookback_days_first_run": 7}. Credentials are never set
+                                here — see docs/legifrance-piste.md.
+                            </p>
                             <field name="configuration_json" nolabel="1"/>
                         </page>
                         <page string="Relevance Rules">

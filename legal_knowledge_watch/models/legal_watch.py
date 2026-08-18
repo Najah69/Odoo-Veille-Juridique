@@ -34,6 +34,7 @@ class LegalWatch(models.Model):
         selection=[
             ("manual", "Manual import"),
             ("rss", "RSS/Atom"),
+            ("legifrance", "Légifrance / PISTE"),
         ],
         string="Connector", required=True, default="manual",
     )
@@ -185,7 +186,7 @@ class LegalWatch(models.Model):
             "canonical_url": item.canonical_url,
             "title": item.title,
             "published_at": _to_odoo_datetime(item.published_at),
-            "document_type": "news",
+            "document_type": (item.source_metadata or {}).get("document_type") or "news",
             "authority": (item.source_metadata or {}).get("author") or self.source_id.name,
             "jurisdiction": "fr",
             "language": item.language or "fr_FR",

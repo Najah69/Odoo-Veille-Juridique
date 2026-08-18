@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Légifrance/PISTE credentials — intentionally left empty here.
+             Set them manually in production (system parameters or, better,
+             the LKW_LEGIFRANCE_CLIENT_ID/LKW_LEGIFRANCE_CLIENT_SECRET
+             environment variables, checked first). Never commit real
+             values to this file. See docs/legifrance-piste.md. -->
+        <record id="param_legifrance_client_id" model="ir.config_parameter">
+            <field name="key">legal_knowledge_watch.legifrance.client_id</field>
+            <field name="value"></field>
+        </record>
+        <record id="param_legifrance_client_secret" model="ir.config_parameter">
+            <field name="key">legal_knowledge_watch.legifrance.client_secret</field>
+            <field name="value"></field>
+        </record>
+
+    </data>
+</odoo>

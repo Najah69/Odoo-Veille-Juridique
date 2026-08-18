@@ -17,12 +17,15 @@ qualified professional.
 Phase 0: manual import (file upload or pasted text).
 Phase 1: RSS/Atom connector, deterministic relevance rules, scheduled fetch
 cron.
-Phase 2 (this version): optional OCA DMS storage backend, selectable per
-watch/import (auto/dms/attachment). OCA DMS is never a hard dependency —
-the module installs and works fully with the ir.attachment fallback alone.
-No AI yet.
+Phase 2: optional OCA DMS storage backend, selectable per watch/import
+(auto/dms/attachment). OCA DMS is never a hard dependency — the module
+installs and works fully with the ir.attachment fallback alone.
+Phase 3 (this version): Légifrance/PISTE connector (LODA collection —
+lois, ordonnances, décrets, arrêtés). See docs/legifrance-piste.md for
+exactly what was verified against real sources vs. what still needs
+checking against a live PISTE sandbox account. No AI yet.
     """,
-    "version": "18.0.3.0.0",
+    "version": "18.0.4.0.0",
     "category": "Tools",
     "author": "Chapeau Blanc Group, Community Contributors",
     "website": "https://github.com/Najah69/odoo-legal-knowledge-watch",
@@ -40,6 +43,7 @@ No AI yet.
         "data/legal_sequence.xml",
         "data/legal_tags.xml",
         "data/ir_cron.xml",
+        "data/legifrance_config_parameters.xml",
         "views/legal_source_views.xml",
         "views/legal_tag_views.xml",
         "views/legal_watch_views.xml",

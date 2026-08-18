@@ -8,11 +8,16 @@ a locally-owned document history.
 > tax or accounting advice, and it does not replace consultation with a
 > qualified lawyer, accountant or other professional.**
 
-## Status: Phase 2 (optional OCA DMS storage)
+## Status: Phase 3 (Légifrance/PISTE)
 
 - Manual import (file upload or pasted text).
 - **RSS/Atom connector**: conditional GET (ETag/Last-Modified), bounded
   retries, domain whitelist, never scrapes a linked article by default.
+- **Légifrance/PISTE connector** (LODA collection: lois, ordonnances,
+  décrets, arrêtés) — OAuth2 Client Credentials, keyword+date+nature
+  search, full-text retrieval. See `docs/legifrance-piste.md` for exactly
+  what was verified against real sources (no PISTE account was available
+  to test this live) vs. what still needs checking against a live sandbox.
 - **Deterministic relevance rules** (keyword/regex/source-field →
   include/exclude/score/tag/requires_review), evaluated before ingestion.
 - Scheduled fetch cron with a PostgreSQL-row-lock guard against concurrent
@@ -25,9 +30,8 @@ a locally-owned document history.
   archived/superseded`).
 - Multi-company record rules and role-based access control.
 
-Légifrance/PISTE and AI-assisted qualification are planned in later phases
-and are **not** part of this version. See `CHANGELOG.md` for exactly what
-is implemented today.
+AI-assisted qualification is planned in a later phase and is **not** part
+of this version. See `CHANGELOG.md` for exactly what is implemented today.
 
 ## Compatibility
 
@@ -48,7 +52,9 @@ is implemented today.
    already present: `pip install requests feedparser beautifulsoup4`.
 3. Update the apps list and install **Legal Knowledge Watch**.
 
-No OCA module and no external API credentials are required for this phase.
+No OCA module is required. A Légifrance/PISTE watch needs PISTE
+credentials (see `docs/legifrance-piste.md`); every other feature works
+with zero external accounts.
 
 ## Quick start
 
@@ -64,7 +70,8 @@ No OCA module and no external API credentials are required for this phase.
 
 For an RSS watch instead, see `docs/operations.md` ("Adding a new RSS watch
 — minimal example") and the connector/rule contract in `docs/connectors.md`.
-To store content in OCA DMS instead of `ir.attachment`, see
+For a Légifrance/PISTE watch, see `docs/legifrance-piste.md`. To store
+content in OCA DMS instead of `ir.attachment`, see
 `docs/oca-dms-integration.md`.
 
 ## Architecture in one paragraph
@@ -82,7 +89,10 @@ safe, idempotent no-op instead of creating clutter.
 
 ## Security & data
 
-- No secrets are used or stored in this phase (no external API, no OAuth).
+- Manual import, RSS and OCA DMS need no secrets at all. Légifrance/PISTE
+  needs OAuth2 credentials, read via environment variables (preferred) or
+  system parameters — never committed, never displayed in the UI, never
+  logged. See `docs/legifrance-piste.md`.
 - Access is controlled by four groups (`User`, `Reviewer`, `Manager`,
   `Administrator`) and company-scoped record rules.
 - Document deletion (`unlink`) is restricted to `Administrator`; use
@@ -106,8 +116,9 @@ From an Odoo 18 environment with this module on the addons path:
 odoo --test-enable --stop-after-init -i legal_knowledge_watch -d <test_db>
 ```
 
-All tests run offline: every RSS test mocks `requests.get` — the suite never
-makes a real HTTP call.
+All tests run offline: every RSS/Légifrance test mocks the `requests` calls
+(including the OAuth token request) — the suite never makes a real HTTP
+call.
 
 ## License
 

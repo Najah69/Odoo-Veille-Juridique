@@ -7,3 +7,4 @@ from . import test_rss_connector
 from . import test_relevance_service
 from . import test_watch_ingestion
 from . import test_storage
+from . import test_legifrance_connector
