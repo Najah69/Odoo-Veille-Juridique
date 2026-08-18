@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Minimal starter taxonomy, freely editable by administrators -->
+        <!-- Taxonomie de départ minimale, librement modifiable par les administrateurs -->
+        <record id="legal_tag_social" model="legal.tag">
+            <field name="name">Social</field>
+            <field name="color">1</field>
+        </record>
+        <record id="legal_tag_fiscal" model="legal.tag">
+            <field name="name">Fiscal</field>
+            <field name="color">2</field>
+        </record>
+        <record id="legal_tag_societes" model="legal.tag">
+            <field name="name">Droit des sociétés</field>
+            <field name="color">3</field>
+        </record>
+        <record id="legal_tag_comptabilite" model="legal.tag">
+            <field name="name">Comptabilité</field>
+            <field name="color">4</field>
+        </record>
+        <record id="legal_tag_rgpd" model="legal.tag">
+            <field name="name">RGPD</field>
+            <field name="color">5</field>
+        </record>
+        <record id="legal_tag_a_qualifier" model="legal.tag">
+            <field name="name">À qualifier</field>
+            <field name="color">0</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_legal_tag_list" model="ir.ui.view">
+        <field name="name">legal.tag.list</field>
+        <field name="model">legal.tag</field>
+        <field name="arch" type="xml">
+            <list string="Legal Tags" editable="bottom">
+                <field name="name"/>
+                <field name="color" widget="color_picker"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_legal_tag" model="ir.actions.act_window">
+        <field name="name">Tags</field>
+        <field name="res_model">legal.tag</field>
+        <field name="view_mode">list</field>
+    </record>
+
+</odoo>

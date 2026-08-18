@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- TODO: add static/description/icon.png before publishing and set web_icon here -->
+    <menuitem id="menu_legal_knowledge_watch_root" name="Legal Knowledge Watch"
+              sequence="60"/>
+
+    <menuitem id="menu_legal_document" name="Documents"
+              parent="menu_legal_knowledge_watch_root"
+              action="action_legal_document" sequence="10"/>
+
+    <menuitem id="menu_legal_manual_import" name="Manual Import"
+              parent="menu_legal_knowledge_watch_root"
+              action="legal_knowledge_watch.action_legal_manual_import_wizard"
+              sequence="15"/>
+
+    <menuitem id="menu_legal_watch" name="Watches"
+              parent="menu_legal_knowledge_watch_root"
+              action="action_legal_watch" sequence="20"/>
+
+    <menuitem id="menu_legal_ingestion_run" name="Ingestion Runs"
+              parent="menu_legal_knowledge_watch_root"
+              action="action_legal_ingestion_run" sequence="30"/>
+
+    <menuitem id="menu_legal_configuration" name="Configuration"
+              parent="menu_legal_knowledge_watch_root" sequence="90"/>
+
+    <menuitem id="menu_legal_source" name="Sources"
+              parent="menu_legal_configuration"
+              action="action_legal_source" sequence="10"/>
+
+    <menuitem id="menu_legal_tag" name="Tags"
+              parent="menu_legal_configuration"
+              action="action_legal_tag" sequence="20"/>
+
+</odoo>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_legal_manual_import_wizard_form" model="ir.ui.view">
+        <field name="name">legal.manual.import.wizard.form</field>
+        <field name="model">legal.manual.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Manual Legal Knowledge Import">
+                <group>
+                    <field name="import_mode" widget="radio"/>
+                </group>
+                <group>
+                    <group>
+                        <field name="title"/>
+                        <field name="source_id"/>
+                        <field name="watch_id"/>
+                        <field name="external_id"/>
+                        <field name="source_url"/>
+                    </group>
+                    <group>
+                        <field name="document_type"/>
+                        <field name="published_at"/>
+                        <field name="language"/>
+                        <field name="tag_ids" widget="many2many_tags"/>
+                        <field name="review_state_choice"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="attachment_data" filename="attachment_filename"
+                           invisible="import_mode != 'file'"/>
+                    <field name="attachment_filename" invisible="True"/>
+                    <field name="plain_text_input" nolabel="1"
+                           invisible="import_mode != 'text'"/>
+                </group>
+                <footer>
+                    <button name="action_import" type="object" string="Import"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_legal_manual_import_wizard" model="ir.actions.act_window">
+        <field name="name">Manual Import</field>
+        <field name="res_model">legal.manual.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

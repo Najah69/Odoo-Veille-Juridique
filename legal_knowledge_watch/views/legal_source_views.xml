@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_legal_source_list" model="ir.ui.view">
+        <field name="name">legal.source.list</field>
+        <field name="model">legal.source</field>
+        <field name="arch" type="xml">
+            <list string="Legal Sources">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="authority_type"/>
+                <field name="trust_level"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_legal_source_form" model="ir.ui.view">
+        <field name="name">legal.source.form</field>
+        <field name="model">legal.source</field>
+        <field name="arch" type="xml">
+            <form string="Legal Source">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="authority_type"/>
+                            <field name="trust_level"/>
+                        </group>
+                        <group>
+                            <field name="base_url" widget="url"/>
+                            <field name="terms_url" widget="url"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_legal_source" model="ir.actions.act_window">
+        <field name="name">Sources</field>
+        <field name="res_model">legal.source</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

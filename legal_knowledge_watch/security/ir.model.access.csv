@@ -1,0 +1,18 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_legal_source_user,legal.source user,model_legal_source,group_legal_watch_user,1,0,0,0
+access_legal_source_manager,legal.source manager,model_legal_source,group_legal_watch_manager,1,1,1,0
+access_legal_source_admin,legal.source admin,model_legal_source,group_legal_watch_administrator,1,1,1,1
+access_legal_tag_user,legal.tag user,model_legal_tag,group_legal_watch_user,1,0,0,0
+access_legal_tag_manager,legal.tag manager,model_legal_tag,group_legal_watch_manager,1,1,1,0
+access_legal_tag_admin,legal.tag admin,model_legal_tag,group_legal_watch_administrator,1,1,1,1
+access_legal_watch_user,legal.watch user,model_legal_watch,group_legal_watch_user,1,0,0,0
+access_legal_watch_manager,legal.watch manager,model_legal_watch,group_legal_watch_manager,1,1,1,0
+access_legal_watch_admin,legal.watch admin,model_legal_watch,group_legal_watch_administrator,1,1,1,1
+access_legal_knowledge_document_user,legal.knowledge.document user,model_legal_knowledge_document,group_legal_watch_user,1,0,1,0
+access_legal_knowledge_document_reviewer,legal.knowledge.document reviewer,model_legal_knowledge_document,group_legal_watch_reviewer,1,1,1,0
+access_legal_knowledge_document_admin,legal.knowledge.document admin,model_legal_knowledge_document,group_legal_watch_administrator,1,1,1,1
+access_legal_document_version_user,legal.document.version user,model_legal_document_version,group_legal_watch_user,1,1,1,0
+access_legal_document_version_admin,legal.document.version admin,model_legal_document_version,group_legal_watch_administrator,1,1,1,1
+access_legal_ingestion_run_user,legal.ingestion.run user,model_legal_ingestion_run,group_legal_watch_user,1,1,1,0
+access_legal_ingestion_run_admin,legal.ingestion.run admin,model_legal_ingestion_run,group_legal_watch_administrator,1,1,1,1
+access_legal_manual_import_wizard_user,legal.manual.import.wizard user,model_legal_manual_import_wizard,group_legal_watch_user,1,1,1,1

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_legal_watch_list" model="ir.ui.view">
+        <field name="name">legal.watch.list</field>
+        <field name="model">legal.watch</field>
+        <field name="arch" type="xml">
+            <list string="Legal Watches">
+                <field name="name"/>
+                <field name="source_id"/>
+                <field name="connector_code"/>
+                <field name="owner_id"/>
+                <field name="document_count"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Defined before the form view below: the form's stat button
+         resolves %(action_legal_watch_document)d at load time, so the
+         action record must already exist. -->
+    <record id="action_legal_watch_document" model="ir.actions.act_window">
+        <field name="name">Documents</field>
+        <field name="res_model">legal.knowledge.document</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('watch_id', '=', active_id)]</field>
+    </record>
+
+    <record id="view_legal_watch_form" model="ir.ui.view">
+        <field name="name">legal.watch.form</field>
+        <field name="model">legal.watch</field>
+        <field name="arch" type="xml">
+            <form string="Legal Watch">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_legal_watch_document)d" type="action"
+                                class="oe_stat_button" icon="fa-file-text-o"
+                                context="{'default_watch_id': id}">
+                            <field name="document_count" widget="statinfo" string="Documents"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="source_id"/>
+                            <field name="connector_code"/>
+                        </group>
+                        <group>
+                            <field name="owner_id"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_legal_watch" model="ir.actions.act_window">
+        <field name="name">Watches</field>
+        <field name="res_model">legal.watch</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
