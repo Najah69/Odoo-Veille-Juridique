@@ -64,8 +64,14 @@ server-rendered HTML — real structured data, but an internal
 implementation detail rather than a stable public contract, unlike
 Légifrance/OpenFisca. See docs/open-lefebvre-dalloz.md for the full
 grounding and residual-risk disclosure.
+Phase 10 (this version): a simple, non-technical reading page
+(/veille-juridique) for legal.knowledge.document — a clean list of
+recent documents with their content, meant for a non-technical
+stakeholder, as opposed to the Watches configuration screen. Adds a
+"website" dependency for this. Respects the visiting user's own
+group/company access (no sudo()).
     """,
-    "version": "18.0.9.0.0",
+    "version": "18.0.10.0.0",
     "category": "Tools",
     "author": "Chapeau Blanc Group, Community Contributors",
     "website": "https://github.com/Najah69/Odoo-Veille-Juridique",
@@ -73,6 +79,7 @@ grounding and residual-risk disclosure.
     "depends": [
         "base",
         "mail",
+        "website",
     ],
     "external_dependencies": {
         "python": ["requests", "feedparser", "bs4"],
@@ -96,6 +103,7 @@ grounding and residual-risk disclosure.
         "views/legal_retention_policy_views.xml",
         "wizard/legal_manual_import_wizard_views.xml",
         "views/menus.xml",
+        "views/legal_watch_reader_templates.xml",
     ],
     "application": True,
     "installable": True,

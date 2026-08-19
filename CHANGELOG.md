@@ -2,6 +2,19 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [18.0.10.0.0] - Unreleased — Phase 10 (reading page)
+
+### Added
+- `/veille-juridique`: a simple, non-technical reading page for
+  `legal.knowledge.document` — recent documents as clean cards (title,
+  source, date, status badge, content preview), newest first. Meant as
+  the landing point for a non-technical stakeholder button/link, as
+  opposed to the Watches configuration screen (`/odoo/action-...`).
+  `controllers/legal_watch_reader.py` + `views/legal_watch_reader_templates.xml`.
+  No `sudo()` — the page respects the visiting user's own
+  group/company access exactly like the backend would.
+- New `website` module dependency (required for the page's layout/routing).
+
 ## [18.0.9.0.0] - Unreleased — Phase 9 (Open Lefebvre Dalloz connector)
 
 ### Added

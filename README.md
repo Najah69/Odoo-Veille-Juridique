@@ -248,17 +248,20 @@ aujourd'hui.
 
 - Odoo 18.0 Community.
 - Python 3.12.
-- Dependencies: `base`, `mail` (core Odoo only). External Python packages:
-  `requests`, `feedparser`, `bs4` (beautifulsoup4) — declared in the
-  manifest's `external_dependencies`, so the module refuses to install if
-  any is missing. `PyPDF2` is used opportunistically for PDF text
-  extraction in the manual-import wizard if it is installed — if it is not,
-  the original PDF is still kept as an attachment and the document is
-  flagged for human review instead of failing the import.
-  <br>Dépendances : `base`, `mail` (cœur Odoo uniquement). Paquets Python
-  externes : `requests`, `feedparser`, `bs4` (beautifulsoup4) — déclarés
-  dans `external_dependencies` du manifest, donc le module refuse de
-  s'installer si l'un manque. `PyPDF2` est utilisé de façon opportuniste
+- Dependencies: `base`, `mail`, `website` (core Odoo only — `website` is
+  needed for the `/veille-juridique` reading page). External Python
+  packages: `requests`, `feedparser`, `bs4` (beautifulsoup4) — declared in
+  the manifest's `external_dependencies`, so the module refuses to
+  install if any is missing. `PyPDF2` is used opportunistically for PDF
+  text extraction in the manual-import wizard if it is installed — if it
+  is not, the original PDF is still kept as an attachment and the
+  document is flagged for human review instead of failing the import.
+  <br>Dépendances : `base`, `mail`, `website` (cœur Odoo uniquement —
+  `website` est nécessaire pour la page de lecture `/veille-juridique`).
+  Paquets Python externes : `requests`, `feedparser`, `bs4`
+  (beautifulsoup4) — déclarés dans `external_dependencies` du manifest,
+  donc le module refuse de s'installer si l'un manque. `PyPDF2` est
+  utilisé de façon opportuniste
   pour l'extraction de texte PDF dans l'assistant d'import manuel s'il est
   installé — sinon, le PDF original reste conservé en pièce jointe et le
   document est marqué pour revue humaine plutôt que de faire échouer
