@@ -52,7 +52,7 @@ resolving DNS here would break this project's offline test suite).
     "version": "18.0.7.0.0",
     "category": "Tools",
     "author": "Chapeau Blanc Group, Community Contributors",
-    "website": "https://github.com/Najah69/odoo-legal-knowledge-watch",
+    "website": "https://github.com/Najah69/Odoo-Veille-Juridique",
     "license": "AGPL-3",
     "depends": [
         "base",

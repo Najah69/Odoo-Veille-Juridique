@@ -25,7 +25,7 @@ try:
 except ImportError:  # pragma: no cover - exercised via ImportError path in tests
     feedparser = None
 
-DEFAULT_USER_AGENT = "legal-knowledge-watch/1.0 (+https://github.com/Najah69/odoo-legal-knowledge-watch)"
+DEFAULT_USER_AGENT = "legal-knowledge-watch/1.0 (+https://github.com/Najah69/Odoo-Veille-Juridique)"
 DEFAULT_MAX_ITEMS_PER_RUN = 50
 DEFAULT_TIMEOUT_SECONDS = 20
 DEFAULT_MAX_RESPONSE_BYTES = 5_000_000

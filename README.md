@@ -1,6 +1,6 @@
 # Legal Knowledge Watch
 
-[![Tests](https://github.com/Najah69/odoo-legal-knowledge-watch/actions/workflows/tests.yml/badge.svg)](https://github.com/Najah69/odoo-legal-knowledge-watch/actions/workflows/tests.yml)
+[![Tests](https://github.com/Najah69/Odoo-Veille-Juridique/actions/workflows/tests.yml/badge.svg)](https://github.com/Najah69/Odoo-Veille-Juridique/actions/workflows/tests.yml)
 
 Odoo 18 Community module to collect, normalize, deduplicate and archive legal
 and regulatory content from trusted sources, with a human review workflow and
