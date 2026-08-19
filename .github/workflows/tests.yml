@@ -1,0 +1,51 @@
+name: Tests
+
+# Runs the module's own test suite (never the network — every RSS/
+# Légifrance/AI-provider test mocks `requests`, see CONTRIBUTING.md)
+# against the official Odoo 18 image + a throwaway Postgres database.
+#
+# Unverified at the time this workflow was added (Phase 7, docs/publish
+# prep) — this repository has no GitHub remote yet, so no run of this
+# workflow has actually happened. It mirrors the manual install/test
+# command documented in README.md and CONTRIBUTING.md; check the first
+# real run's log rather than assuming it's correct on faith.
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install module + run its test suite in the official Odoo 18 image
+        run: |
+          docker run --rm --network host \
+            -v "${{ github.workspace }}:/mnt/extra-addons/legal_knowledge_watch" \
+            -e HOST=localhost -e PORT=5432 -e USER=odoo -e PASSWORD=odoo \
+            odoo:18.0 \
+            bash -c "
+              pip install --break-system-packages --quiet requests feedparser beautifulsoup4 PyPDF2 &&
+              odoo --db_host=localhost --db_port=5432 --db_user=odoo --db_password=odoo \
+                   -d legal_knowledge_watch_ci --workers=0 \
+                   --test-enable --test-tags /legal_knowledge_watch \
+                   --stop-after-init -i legal_knowledge_watch
+            "

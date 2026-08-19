@@ -2,6 +2,23 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased] — Phase 7 (public docs / GitHub publish prep)
+
+### Added
+- `docs/architecture.md`: consolidated data-model/lifecycle/dedup-order
+  reference — the doc three code comments have pointed to since Phase 0
+  (`models/legal_knowledge_document.py`,
+  `services/deduplication_service.py`, `docs/ai-providers.md`) without it
+  ever actually existing.
+- `.github/workflows/tests.yml`: runs the full test suite (official Odoo
+  18 image + throwaway Postgres) on push/PR. Unverified against a real
+  GitHub Actions run — this repo has no remote yet — check its first real
+  run rather than assuming it's correct on faith.
+- `.github/ISSUE_TEMPLATE/` (bug report, feature request),
+  `.github/PULL_REQUEST_TEMPLATE.md`.
+- `SECURITY.md`: points to GitHub private vulnerability reporting and to
+  `docs/security.md` for what's already a documented, accepted tradeoff.
+
 ## [18.0.7.0.0] - Unreleased — Phase 6 (security audit / release candidate)
 
 ### Security

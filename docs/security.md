@@ -217,11 +217,13 @@ undocumented:
   four call sites have different-enough semantics (streaming vs. not,
   different terminal-error sets) that unifying them was judged riskier
   than valuable for a first release candidate.
-- **No CI / lint tooling configured** in this repository (no
-  `.github/workflows`, no `pyproject.toml`/`flake8`/`ruff` config).
-  Running the test suite is currently a manual step (`README.md`'s
-  "Running the tests"). Adding CI is Prompt 8/9 territory (public
-  docs/publish prep), not this phase.
+- **No lint tooling configured** in this repository (no
+  `pyproject.toml`/`flake8`/`ruff` config) — `.github/workflows/tests.yml`
+  (added in the Prompt 8/9 publish-prep pass) now runs the test suite on
+  push/PR, but there is still no automated style/lint check. That
+  workflow is itself unverified against a real GitHub Actions run (this
+  repo has no remote yet at the time it was written) — check its first
+  real run rather than assuming it's correct on faith.
 - **AI provider `base_url` has no domain allowlist** equivalent to RSS's
   `allowed_domains` — see the SSRF section above. `base_url` is
   Administrator-only to set, which bounds but does not close this.

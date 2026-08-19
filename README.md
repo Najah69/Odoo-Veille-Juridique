@@ -1,5 +1,7 @@
 # Legal Knowledge Watch
 
+[![Tests](https://github.com/Najah69/odoo-legal-knowledge-watch/actions/workflows/tests.yml/badge.svg)](https://github.com/Najah69/odoo-legal-knowledge-watch/actions/workflows/tests.yml)
+
 Odoo 18 Community module to collect, normalize, deduplicate and archive legal
 and regulatory content from trusted sources, with a human review workflow and
 a locally-owned document history.
@@ -110,6 +112,9 @@ or the storage backend changes. Deduplication is checked in this order:
 `(source, external_id)`, then canonical URL within the same source, then
 content hash globally — this is what makes re-importing the same content a
 safe, idempotent no-op instead of creating clutter.
+
+Full data model, document lifecycle and ingestion pipeline:
+`docs/architecture.md`. Contributing a change: `CONTRIBUTING.md`.
 
 ## Security & data
 
