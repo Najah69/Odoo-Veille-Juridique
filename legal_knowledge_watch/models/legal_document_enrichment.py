@@ -2,10 +2,15 @@ from odoo import fields, models
 
 
 class LegalDocumentEnrichment(models.Model):
-    # An AI (or future rule-based) analysis result. Never confused with the
-    # document's own source content — always a separate, versioned,
+    # EN: An AI (or future rule-based) analysis result. Never confused with
+    # the document's own source content — always a separate, versioned,
     # append-only record. See legal.knowledge.document's module docstring
     # for the source-of-truth principle this enforces.
+    # FR: Un résultat d'analyse IA (ou, à terme, à base de règles). Jamais
+    # confondu avec le contenu source du document lui-même — toujours un
+    # enregistrement séparé, versionné, en ajout seul. Voir la docstring de
+    # module de legal.knowledge.document pour le principe de source de
+    # vérité que cela impose.
     _name = "legal.document.enrichment"
     _description = "Legal Knowledge Watch: Document Enrichment"
     _order = "create_date desc"

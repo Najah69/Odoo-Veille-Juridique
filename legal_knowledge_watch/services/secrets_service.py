@@ -3,6 +3,12 @@ credentials. Environment variables take precedence over
 ir.config_parameter — see docs/legifrance-piste.md and
 docs/ai-providers.md. Values are only ever read for outbound HTTP calls;
 never log or display what this returns.
+
+FR : Abstraction des secrets partagée par tout connecteur/fournisseur
+ayant besoin d'identifiants. Les variables d'environnement priment sur
+ir.config_parameter — voir docs/legifrance-piste.md et
+docs/ai-providers.md. Les valeurs ne sont lues que pour des appels HTTP
+sortants ; ne jamais logger ni afficher ce que cette fonction retourne.
 """
 import os
 import re

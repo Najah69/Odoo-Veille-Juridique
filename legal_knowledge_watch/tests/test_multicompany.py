@@ -54,9 +54,14 @@ class TestMultiCompanyIsolation(LegalWatchTransactionCase):
         self.assertTrue(docs_for_a)
 
     def test_ai_job_isolated_by_document_company(self):
-        # company_id on legal.ai.job is a related field off document_id —
-        # this confirms the record rule actually enforces it, not just
-        # that the field is populated. See services/security.md P0 finding.
+        # EN: company_id on legal.ai.job is a related field off
+        # document_id — this confirms the record rule actually enforces
+        # it, not just that the field is populated. See
+        # services/security.md P0 finding.
+        # FR : company_id sur legal.ai.job est un champ related dérivé de
+        # document_id — ce test confirme que la règle d'enregistrement
+        # l'applique réellement, pas seulement que le champ est renseigné.
+        # Voir le constat P0 de services/security.md.
         document = self.env["legal.knowledge.document"].create({
             "name": "Doc A (AI job)",
             "source_id": self.source.id,
@@ -85,9 +90,13 @@ class TestMultiCompanyIsolation(LegalWatchTransactionCase):
         self.assertTrue(jobs_for_a)
 
     def test_enrichment_isolated_by_document_company(self):
-        # Same rationale as above: output_json can hold excerpts of the
-        # source document, so cross-company visibility here is the most
-        # sensitive of the P0 gaps fixed in the security audit.
+        # EN: Same rationale as above: output_json can hold excerpts of
+        # the source document, so cross-company visibility here is the
+        # most sensitive of the P0 gaps fixed in the security audit.
+        # FR : Même raisonnement que ci-dessus : output_json peut contenir
+        # des extraits du document source, donc la visibilité
+        # inter-société est ici le plus sensible des manquements P0
+        # corrigés lors de l'audit sécurité.
         document = self.env["legal.knowledge.document"].create({
             "name": "Doc A (enrichment)",
             "source_id": self.source.id,

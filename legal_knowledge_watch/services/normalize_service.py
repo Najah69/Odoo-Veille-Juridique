@@ -3,6 +3,14 @@ stable, hashable plain text used for deduplication and storage.
 
 These functions never touch the Odoo ORM so they stay trivially unit
 testable and reusable by future connectors (RSS, Légifrance, ...).
+
+FR : Fonctions utilitaires pures, sans effet de bord, pour transformer le
+contenu brut collecté en texte simple stable et hachable, utilisé pour la
+déduplication et le stockage.
+
+Ces fonctions ne touchent jamais l'ORM Odoo, ce qui les garde
+trivialement testables unitairement et réutilisables par de futurs
+connecteurs (RSS, Légifrance, ...).
 """
 import hashlib
 import re
@@ -18,7 +26,11 @@ _WHITESPACE_RE = re.compile(r"\s+")
 
 
 def decode_bytes(raw_content, encoding_hint=None):
-    """Decode raw bytes to text, tolerating unknown/wrong encodings."""
+    """Decode raw bytes to text, tolerating unknown/wrong encodings.
+
+    FR : Décode des octets bruts en texte, en tolérant les encodages
+    inconnus/incorrects.
+    """
     if isinstance(raw_content, str):
         return raw_content
     if raw_content is None:
@@ -32,7 +44,11 @@ def decode_bytes(raw_content, encoding_hint=None):
 
 
 def html_to_text(html_content):
-    """Strip tags/scripts/styles from HTML and return readable plain text."""
+    """Strip tags/scripts/styles from HTML and return readable plain text.
+
+    FR : Retire les balises/scripts/styles du HTML et retourne un texte
+    simple lisible.
+    """
     if not html_content:
         return ""
     if BeautifulSoup is None:
@@ -47,7 +63,11 @@ def html_to_text(html_content):
 
 
 def normalize_whitespace(text):
-    """Unicode-normalize and collapse whitespace into single spaces."""
+    """Unicode-normalize and collapse whitespace into single spaces.
+
+    FR : Normalise l'Unicode et réduit les espaces multiples à un seul
+    espace.
+    """
     if not text:
         return ""
     text = unicodedata.normalize("NFC", text)
@@ -56,7 +76,11 @@ def normalize_whitespace(text):
 
 
 def compute_content_hash(plain_text):
-    """Stable SHA-256 (hex) of the normalized text used for deduplication."""
+    """Stable SHA-256 (hex) of the normalized text used for deduplication.
+
+    FR : SHA-256 stable (hexadécimal) du texte normalisé, utilisé pour la
+    déduplication.
+    """
     normalized = normalize_whitespace(plain_text or "")
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
@@ -65,6 +89,11 @@ def extract_pdf_text(raw_bytes):
     """Best-effort text extraction from a PDF. Returns None (instead of
     raising) when no PDF library is available or extraction fails, so the
     caller can flag the document for human review instead of crashing.
+
+    FR : Extraction de texte best-effort depuis un PDF. Retourne None
+    (plutôt que de lever une exception) quand aucune bibliothèque PDF
+    n'est disponible ou que l'extraction échoue, afin que l'appelant
+    puisse marquer le document pour revue humaine plutôt que de planter.
     """
     import io
 
@@ -83,6 +112,10 @@ def extract_pdf_text(raw_bytes):
 def normalize_canonical_url(url):
     """Return a stable canonical form of a URL: lowercase scheme/host, no
     fragment, sorted query string, no trailing slash on bare paths.
+
+    FR : Retourne une forme canonique stable d'une URL : schéma/hôte en
+    minuscules, sans fragment, chaîne de requête triée, sans slash final
+    sur les chemins nus.
     """
     if not url:
         return ""

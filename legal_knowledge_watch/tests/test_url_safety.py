@@ -1,5 +1,9 @@
 """Unit tests for services.url_safety. Pure string/ipaddress logic —
 touches no network by construction, so no mocking is needed.
+
+FR : Tests unitaires de services.url_safety. Logique pure (chaînes de
+caractères + module ipaddress) — ne touche jamais au réseau par
+construction, donc aucun mock n'est nécessaire.
 """
 import unittest
 

@@ -2,9 +2,13 @@ from odoo import fields, models
 
 
 class LegalWatchRule(models.Model):
-    # Deterministic, explainable relevance rule evaluated before any AI
+    # EN: Deterministic, explainable relevance rule evaluated before any AI
     # involvement. See services/relevance_service.py for the evaluation
     # logic and docs/connectors.md for the field/operator/effect contract.
+    # FR: Règle de pertinence déterministe et explicable, évaluée avant
+    # toute intervention d'une IA. Voir services/relevance_service.py pour
+    # la logique d'évaluation et docs/connectors.md pour le contrat
+    # champ/opérateur/effet.
     _name = "legal.watch.rule"
     _description = "Legal Knowledge Watch Rule"
     _order = "watch_id, sequence, id"

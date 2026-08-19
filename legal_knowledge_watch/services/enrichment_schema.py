@@ -4,6 +4,14 @@ external_dependencies minimal. Keep both files in sync if the schema
 changes. A violation must never silently mutate document metadata: see
 legal.document.enrichment / legal.ai.job for how a validation failure is
 turned into a failed/needs_review state instead.
+
+FR : Validateur maison pour le JSON Schema legal-enrichment-1.0
+(docs/legal-enrichment-schema-1.0.json) — pas de dépendance jsonschema,
+pour garder external_dependencies minimal. Garder les deux fichiers
+synchronisés si le schéma change. Une violation ne doit jamais muter
+silencieusement les métadonnées du document : voir
+legal.document.enrichment / legal.ai.job pour la façon dont un échec de
+validation est plutôt transformé en état failed/needs_review.
 """
 
 SCHEMA_VERSION = "1.0"
@@ -18,7 +26,11 @@ def _is_string_list(value):
 
 
 def validate(data):
-    """Return a list of human-readable errors; an empty list means valid."""
+    """Return a list of human-readable errors; an empty list means valid.
+
+    FR : Retourne une liste d'erreurs lisibles par un humain ; une liste
+    vide signifie que les données sont valides.
+    """
     if not isinstance(data, dict):
         return ["Root value must be a JSON object."]
 

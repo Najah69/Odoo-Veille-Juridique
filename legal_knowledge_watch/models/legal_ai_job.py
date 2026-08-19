@@ -21,6 +21,11 @@ class ExportBlockedError(AIProviderError):
     failure. No retry: the job is cancelled and export_state is set to
     'blocked', both outside the per-attempt savepoint so the reason
     survives (see _process()).
+
+    FR : La politique d'export locale a refusé ce document — jamais un
+    échec du provider. Pas de nouvel essai : le job est annulé et
+    export_state passe à 'blocked', les deux en dehors du savepoint par
+    tentative pour que la raison survive (voir _process()).
     """
 
 
@@ -29,6 +34,12 @@ class SchemaValidationError(AIProviderError):
     validation. Terminal (no retry — a malformed response won't fix itself)
     and, like ExportBlockedError, must be handled outside the per-attempt
     savepoint so the audit-trail enrichment record actually persists.
+
+    FR : La réponse de classification du provider a échoué à la validation
+    legal-enrichment-1.0. Terminal (pas de nouvel essai — une réponse mal
+    formée ne se corrigera pas d'elle-même), et comme ExportBlockedError,
+    doit être traité en dehors du savepoint par tentative pour que
+    l'enregistrement d'audit (enrichment) survive réellement.
     """
 
     def __init__(self, message, errors, raw_result):
@@ -38,12 +49,18 @@ class SchemaValidationError(AIProviderError):
 
 
 class LegalAiJob(models.Model):
-    # Asynchronous unit of work against an AI/export provider. Never called
-    # synchronously from the ingestion pipeline — see
+    # EN: Asynchronous unit of work against an AI/export provider. Never
+    # called synchronously from the ingestion pipeline — see
     # legal.knowledge.document.action_request_ai_classification() /
     # action_approve() for where jobs get created, and
     # _cron_process_pending_jobs() for where they get processed, in small
     # batches, each in its own savepoint.
+    # FR: Unité de travail asynchrone contre un provider IA/export. Jamais
+    # appelée de façon synchrone depuis le pipeline d'ingestion — voir
+    # legal.knowledge.document.action_request_ai_classification() /
+    # action_approve() pour où les jobs sont créés, et
+    # _cron_process_pending_jobs() pour où ils sont traités, par petits
+    # lots, chacun dans son propre savepoint.
     _name = "legal.ai.job"
     _description = "Legal Knowledge Watch: AI Job"
     _order = "id"
@@ -99,9 +116,13 @@ class LegalAiJob(models.Model):
     last_error = fields.Text(string="Last Error")
 
     def _try_lock_for_run(self):
-        # Same PostgreSQL row-lock pattern as legal.watch — see
+        # EN: Same PostgreSQL row-lock pattern as legal.watch — see
         # models/legal_watch.py for why (self-releasing, no stale-lock
         # recovery code needed).
+        # FR: Même schéma de verrou PostgreSQL au niveau ligne que
+        # legal.watch — voir models/legal_watch.py pour le pourquoi
+        # (auto-libéré, aucun code de récupération de verrou périmé à
+        # écrire).
         self.ensure_one()
         try:
             with self.env.cr.savepoint():
@@ -139,6 +160,13 @@ class LegalAiJob(models.Model):
         _try_lock_for_run() — but the job's own 'running' state is not).
         Reset to 'retry' with an immediate next_attempt_at rather than
         left stuck forever.
+
+        FR : Un job resté en 'running' aussi longtemps signifie presque
+        certainement que le worker a planté en cours de tentative (le
+        verrou ligne lui-même est libéré automatiquement par PostgreSQL
+        dans ce cas — voir _try_lock_for_run() — mais l'état 'running' du
+        job, lui, ne l'est pas). Remis à 'retry' avec un next_attempt_at
+        immédiat plutôt que laissé bloqué indéfiniment.
         """
         threshold = fields.Datetime.now() - timedelta(minutes=stuck_after_minutes)
         stuck = self.search([
@@ -171,13 +199,19 @@ class LegalAiJob(models.Model):
                     self._run_delete_export(provider)
             self.write({"state": "done", "last_error": False})
         except ExportBlockedError as exc:
-            # Outside the savepoint (it already rolled back): the
+            # EN: Outside the savepoint (it already rolled back): the
             # cancellation and the reason both need to persist.
+            # FR: En dehors du savepoint (déjà annulé) : l'annulation et
+            # sa raison doivent toutes les deux survivre.
             self.write({"state": "cancelled", "last_error": str(exc)[:4000]})
             self.document_id.export_state = "blocked"
         except SchemaValidationError as exc:
-            # Outside the savepoint for the same reason: the audit-trail
-            # enrichment record must survive even though the job fails.
+            # EN: Outside the savepoint for the same reason: the
+            # audit-trail enrichment record must survive even though the
+            # job fails.
+            # FR: En dehors du savepoint pour la même raison :
+            # l'enregistrement d'audit (enrichment) doit survivre même si
+            # le job échoue.
             input_hash = hashlib.sha256(
                 (self.document_id.current_version_text or "").encode("utf-8")
             ).hexdigest()

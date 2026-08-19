@@ -1,5 +1,9 @@
 """AI/export provider tests. Every test mocks requests.get/post/put/delete
 at services.http_retry — no test reaches the network.
+
+FR : Tests des providers IA/export. Chaque test mocke
+requests.get/post/put/delete au niveau de services.http_retry — aucun
+test n'atteint le réseau.
 """
 import os
 from unittest.mock import patch
@@ -207,8 +211,11 @@ class TestAiBrainHttpProvider(LegalWatchTransactionCase):
 
     @patch(_HTTP_GET)
     def test_base_url_pointing_at_loopback_ip_is_rejected(self, mock_get):
-        # No network call must happen: assert_public_host() rejects the
-        # literal loopback IP before requests.get is ever called.
+        # EN: No network call must happen: assert_public_host() rejects
+        # the literal loopback IP before requests.get is ever called.
+        # FR : Aucun appel réseau ne doit avoir lieu : assert_public_host()
+        # rejette l'IP loopback littérale avant même que requests.get ne
+        # soit appelé.
         provider = self._make_provider(base_url="http://127.0.0.1:9999")
         with self._with_token():
             with self.assertRaises(AIProviderError):
@@ -224,7 +231,8 @@ class TestAiBrainHttpProvider(LegalWatchTransactionCase):
         with self._with_token():
             with self.assertRaises(AIProviderError):
                 AiBrainHttpProvider(provider).healthcheck()
-        # A redirect is a hard failure, never retried.
+        # EN: A redirect is a hard failure, never retried.
+        # FR : Une redirection est un échec dur, jamais réessayée.
         self.assertEqual(mock_get.call_count, 1)
         _, kwargs = mock_get.call_args
         self.assertEqual(kwargs["allow_redirects"], False)

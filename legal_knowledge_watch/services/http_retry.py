@@ -3,6 +3,14 @@ retry-with-backoff on 429/5xx/network errors, no retry on other 4xx —
 mirrors the same policy already used by the RSS and Légifrance connectors.
 Also the single SSRF/redirect/size choke point for both AI providers,
 since their base_url is entirely admin-configured (see url_safety.py).
+
+FR : Aide HTTP partagée avec réessai borné pour les fournisseurs
+IA/export. Timeout, réessai avec backoff sur les erreurs 429/5xx/réseau,
+jamais de réessai sur les autres 4xx — reprend la même politique déjà
+utilisée par les connecteurs RSS et Légifrance. C'est aussi le point de
+passage unique pour la protection SSRF/redirection/taille des deux
+fournisseurs IA, puisque leur base_url est entièrement configuré par un
+administrateur (voir url_safety.py).
 """
 import time
 
@@ -23,7 +31,9 @@ def request_with_retries(method, url, error_cls, max_response_bytes=DEFAULT_MAX_
     try:
         assert_public_host(url)
     except UnsafeUrlError as exc:
-        # Config error, not a transient call failure: never retried.
+        # EN: Config error, not a transient call failure: never retried.
+        # FR : Erreur de configuration, pas un échec transitoire d'appel :
+        # jamais réessayé.
         raise error_cls(str(exc)) from exc
 
     kwargs.setdefault("allow_redirects", False)
@@ -40,9 +50,13 @@ def request_with_retries(method, url, error_cls, max_response_bytes=DEFAULT_MAX_
             raise last_exc from exc
 
         if 300 <= response.status_code < 400:
-            # Never silently follow a redirect: it would bypass the SSRF
+            # EN: Never silently follow a redirect: it would bypass the SSRF
             # host check above, which only ever validates the URL we were
             # asked to call — not wherever a redirect points.
+            # FR : Ne jamais suivre une redirection silencieusement : cela
+            # contournerait la vérification SSRF ci-dessus, qui ne valide
+            # jamais que l'URL demandée — pas la destination de la
+            # redirection.
             raise error_cls(
                 f"HTTP {response.status_code} redirect from {url} was not "
                 f"followed (redirects are disabled for safety). Point "

@@ -71,8 +71,10 @@ class LegalWatch(models.Model):
              "for RSS). Never edit manually.",
     )
 
-    # Connector configuration (JSON, connector-specific — see
+    # EN: Connector configuration (JSON, connector-specific — see
     # docs/connectors.md for the schema of each connector).
+    # FR: Configuration du connecteur (JSON, propre à chaque connecteur —
+    # voir docs/connectors.md pour le schéma de chacun).
     configuration_json = fields.Text(string="Configuration (JSON)")
 
     storage_mode = fields.Selection(
@@ -100,6 +102,13 @@ class LegalWatch(models.Model):
         already holds it. Locks are released automatically by PostgreSQL
         when the holding transaction ends (commit, rollback or crash), so
         there is no stale-lock state to recover from.
+
+        FR : Prend un verrou PostgreSQL au niveau ligne, pour la durée de
+        la transaction en cours. Renvoie False sans bloquer si une autre
+        session détient déjà ce verrou. PostgreSQL libère automatiquement
+        le verrou dès que la transaction qui le détient se termine (commit,
+        rollback ou crash) — il n'y a donc aucun état de verrou périmé à
+        récupérer manuellement.
         """
         self.ensure_one()
         try:

@@ -1,5 +1,8 @@
 """RSS/Atom connector tests. Every test mocks requests.get: no test in this
 file may reach the network.
+
+FR : Tests du connecteur RSS/Atom. Chaque test mocke requests.get : aucun
+test de ce fichier ne doit atteindre le réseau.
 """
 import os
 import unittest
@@ -179,8 +182,12 @@ class TestRSSConnectorFetch(unittest.TestCase):
 
     @patch("odoo.addons.legal_knowledge_watch.services.rss_connector.requests.get")
     def test_feed_url_pointing_at_loopback_ip_is_rejected(self, mock_get):
-        # No network call must happen at all: assert_public_host() rejects
-        # the literal loopback IP before requests.get is ever called.
+        # EN: No network call must happen at all: assert_public_host()
+        # rejects the literal loopback IP before requests.get is ever
+        # called.
+        # FR : Aucun appel réseau ne doit avoir lieu : assert_public_host()
+        # rejette l'IP loopback littérale avant même que requests.get ne
+        # soit appelé.
         config = {"feed_url": "http://127.0.0.1/feed.rss"}
         with self.assertRaises(ConnectorFetchError):
             _connector(config).fetch(cursor=None, limit=10)
@@ -200,7 +207,10 @@ class TestRSSConnectorFetch(unittest.TestCase):
         )
         with self.assertRaises(ConnectorFetchError):
             _connector(self.config).fetch(cursor=None, limit=10)
-        # A single attempt: a redirect is a hard failure, never retried.
+        # EN: A single attempt: a redirect is a hard failure, never
+        # retried.
+        # FR : Une seule tentative : une redirection est un échec dur,
+        # jamais réessayée.
         self.assertEqual(mock_get.call_count, 1)
         _, kwargs = mock_get.call_args
         self.assertEqual(kwargs["allow_redirects"], False)

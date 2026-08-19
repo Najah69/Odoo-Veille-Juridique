@@ -2,7 +2,8 @@ from odoo import fields, models
 
 
 class LegalTag(models.Model):
-    # Business taxonomy independent from any DMS-specific tagging system.
+    # EN: Business taxonomy independent from any DMS-specific tagging system.
+    # FR: Taxonomie métier indépendante de tout système de tags propre à un DMS.
     _name = "legal.tag"
     _description = "Legal Knowledge Tag"
     _order = "name"

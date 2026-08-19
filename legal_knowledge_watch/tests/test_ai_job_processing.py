@@ -1,6 +1,11 @@
 """legal.ai.job orchestration tests. The AI provider itself is replaced by
 a fake (this file is about job state machine / policy enforcement / audit
 trail correctness, not HTTP — see test_ai_providers.py for that).
+
+FR : Tests d'orchestration de legal.ai.job. Le provider IA lui-même est
+remplacé par un faux (ce fichier porte sur la machine à états du job, le
+respect de la politique et la justesse de la trace d'audit, pas sur le
+HTTP — voir test_ai_providers.py pour ça).
 """
 from unittest.mock import patch
 
@@ -120,7 +125,9 @@ class TestAiJobProcessing(LegalWatchTransactionCase):
         self.assertEqual(len(enrichment), 1)
         self.assertEqual(enrichment.state, "failed")
         self.assertTrue(enrichment.error_message)
-        # Schema failure must not silently flip document metadata.
+        # EN: Schema failure must not silently flip document metadata.
+        # FR : Un échec de schéma ne doit jamais modifier silencieusement
+        # les métadonnées du document.
         self.assertFalse(document.needs_review)
 
     def test_export_blocked_for_non_approved_document_never_calls_provider(self):

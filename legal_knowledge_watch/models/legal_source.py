@@ -2,7 +2,8 @@ from odoo import fields, models
 
 
 class LegalSource(models.Model):
-    # A publisher or authority a legal.watch/document can be traced back to.
+    # EN: A publisher or authority a legal.watch/document can be traced back to.
+    # FR: Un éditeur ou une autorité à laquelle un legal.watch/document peut être rattaché.
     _name = "legal.source"
     _description = "Legal Knowledge Source"
     _order = "name"

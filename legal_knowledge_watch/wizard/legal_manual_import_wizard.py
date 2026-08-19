@@ -11,9 +11,12 @@ _PDF_EXTENSIONS = (".pdf",)
 
 
 class LegalManualImportWizard(models.TransientModel):
-    # No network connector runs here: this wizard only ingests content the
-    # user pastes or uploads. "source_url" is provenance metadata only and
-    # is never fetched.
+    # EN: No network connector runs here: this wizard only ingests content
+    # the user pastes or uploads. "source_url" is provenance metadata only
+    # and is never fetched.
+    # FR: Aucun connecteur réseau ne tourne ici : cet assistant n'ingère
+    # que le contenu collé ou téléversé par l'utilisateur. « source_url »
+    # n'est qu'une métadonnée de provenance, jamais récupérée.
     _name = "legal.manual.import.wizard"
     _description = "Legal Knowledge Manual Import"
 

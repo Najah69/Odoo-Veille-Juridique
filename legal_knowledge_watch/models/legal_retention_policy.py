@@ -2,13 +2,22 @@ from odoo import fields, models
 
 
 class LegalRetentionPolicy(models.Model):
-    # Retention is opt-in and conservative by construction: a document is
-    # only ever archived (a reversible status change, never a deletion),
-    # and only the *binary content of non-current (superseded) versions*
-    # of an already-archived document is ever physically removed — the
-    # current version's content, and every version/document metadata row,
-    # is never touched by retention. See
+    # EN: Retention is opt-in and conservative by construction: a document
+    # is only ever archived (a reversible status change, never a
+    # deletion), and only the *binary content of non-current (superseded)
+    # versions* of an already-archived document is ever physically
+    # removed — the current version's content, and every
+    # version/document metadata row, is never touched by retention. See
     # legal.knowledge.document._cron_apply_retention() and
+    # docs/operations.md.
+    # FR: La rétention est optionnelle (opt-in) et conservatrice par
+    # construction : un document est seulement archivé (un changement de
+    # statut réversible, jamais une suppression), et seul le *contenu
+    # binaire des versions non courantes (remplacées)* d'un document déjà
+    # archivé est physiquement supprimé — le contenu de la version
+    # courante, et toute ligne de métadonnées de version/document, n'est
+    # jamais touché par la rétention. Voir
+    # legal.knowledge.document._cron_apply_retention() et
     # docs/operations.md.
     _name = "legal.retention.policy"
     _description = "Legal Knowledge Watch: Retention Policy"

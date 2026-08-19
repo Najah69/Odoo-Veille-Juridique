@@ -2,10 +2,15 @@ from odoo import fields, models
 
 
 class LegalRetentionWizard(models.TransientModel):
-    # Deliberately separate from the (disabled-by-default, dry-run-only)
-    # cron: this is how an administrator actually applies retention for
-    # real, one conscious click at a time. See
+    # EN: Deliberately separate from the (disabled-by-default,
+    # dry-run-only) cron: this is how an administrator actually applies
+    # retention for real, one conscious click at a time. See
     # legal.knowledge.document._cron_apply_retention() and
+    # docs/operations.md.
+    # FR: Volontairement séparé du cron (désactivé par défaut, essai à
+    # blanc uniquement) : c'est ainsi qu'un administrateur applique
+    # réellement la rétention, un clic conscient à la fois. Voir
+    # legal.knowledge.document._cron_apply_retention() et
     # docs/operations.md.
     _name = "legal.retention.wizard"
     _description = "Legal Knowledge Watch: Apply Retention"

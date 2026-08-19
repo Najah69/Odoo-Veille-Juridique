@@ -2,8 +2,11 @@ from odoo import fields, models
 
 
 class LegalDocumentVersion(models.Model):
-    # Immutable content snapshot. A document accumulates versions over time;
-    # the source content of a past version is never edited or deleted.
+    # EN: Immutable content snapshot. A document accumulates versions over
+    # time; the source content of a past version is never edited or deleted.
+    # FR: Instantané de contenu immuable. Un document accumule des versions
+    # au fil du temps ; le contenu source d'une version passée n'est jamais
+    # modifié ni supprimé.
     _name = "legal.document.version"
     _description = "Legal Knowledge Document Version"
     _order = "document_id, sequence"

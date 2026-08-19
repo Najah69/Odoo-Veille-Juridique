@@ -51,10 +51,16 @@ class TestWatchIngestionOrchestration(LegalWatchTransactionCase):
         return watch
 
     def test_run_creates_run_and_documents(self):
-        # Distinct plain_text on each item: two items with identical content
-        # (even under different external_id/URL) are legitimately caught by
-        # the content_hash dedup fallback and would collapse into 1 created
-        # + 1 duplicate, not 2 created — see test_dedup_across_two_runs.
+        # EN: Distinct plain_text on each item: two items with identical
+        # content (even under different external_id/URL) are legitimately
+        # caught by the content_hash dedup fallback and would collapse
+        # into 1 created + 1 duplicate, not 2 created — see
+        # test_dedup_across_two_runs.
+        # FR : plain_text distinct pour chaque item : deux items au
+        # contenu identique (même avec external_id/URL différents) sont
+        # légitimement rattrapés par le repli de dédup sur content_hash et
+        # fusionneraient en 1 créé + 1 doublon, pas 2 créés — voir
+        # test_dedup_across_two_runs.
         _FakeConnector.items = [
             _item(external_id="EXT-1", canonical_url="https://exemple.gouv.example.org/1",
                   title="Item un", plain_text="Contenu du premier item de test."),
@@ -92,9 +98,13 @@ class TestWatchIngestionOrchestration(LegalWatchTransactionCase):
                   title="Item valide", plain_text="Contenu de l'item valide."),
             _item(external_id="EXT-BAD", canonical_url="https://exemple.gouv.example.org/bad",
                   title=None, plain_text="Contenu distinct de l'item en échec."),
-            # None title -> ORM required-field violation on create(); a
-            # distinct plain_text avoids being caught as a content_hash
+            # EN: None title -> ORM required-field violation on create();
+            # a distinct plain_text avoids being caught as a content_hash
             # duplicate of the first item before ever reaching create().
+            # FR : title=None -> violation ORM de champ requis lors du
+            # create() ; un plain_text distinct évite d'être rattrapé
+            # comme doublon content_hash du premier item avant même
+            # d'atteindre le create().
         ]
         watch = self._make_rss_watch()
         with patch(_PATCH_TARGET, return_value=_FakeConnector):
@@ -123,17 +133,27 @@ class TestWatchIngestionOrchestration(LegalWatchTransactionCase):
         self.assertEqual(watch.document_count, 1)
 
     def test_try_lock_succeeds_when_uncontended(self):
-        # Odoo's TestCursor.commit() only releases a savepoint (it never
-        # truly commits), so a genuinely separate DB connection can't see
-        # this test's data — a real cross-session lock test is not possible
-        # inside a single TransactionCase. Instead we test the two halves
-        # separately: the SQL/exception-handling path below (with the lock
-        # query's failure simulated), and the orchestration branch in
+        # EN: Odoo's TestCursor.commit() only releases a savepoint (it
+        # never truly commits), so a genuinely separate DB connection
+        # can't see this test's data — a real cross-session lock test is
+        # not possible inside a single TransactionCase. Instead we test
+        # the two halves separately: the SQL/exception-handling path
+        # below (with the lock query's failure simulated), and the
+        # orchestration branch in test_run_skipped_when_lock_unavailable.
+        # FR : Le commit() de TestCursor d'Odoo ne fait que libérer un
+        # savepoint (il ne commit jamais vraiment), donc une connexion DB
+        # réellement séparée ne peut pas voir les données de ce test — un
+        # vrai test de verrou inter-session est impossible dans un seul
+        # TransactionCase. On teste donc les deux moitiés séparément : le
+        # chemin SQL/gestion d'exception ci-dessous (avec l'échec de la
+        # requête de verrou simulé), et la branche d'orchestration dans
         # test_run_skipped_when_lock_unavailable.
         watch = self._make_rss_watch()
         self.assertTrue(watch._try_lock_for_run())
-        # FOR UPDATE NOWAIT never self-blocks on a lock already held by the
-        # same transaction.
+        # EN: FOR UPDATE NOWAIT never self-blocks on a lock already held
+        # by the same transaction.
+        # FR : FOR UPDATE NOWAIT ne se bloque jamais lui-même sur un
+        # verrou déjà détenu par la même transaction.
         self.assertTrue(watch._try_lock_for_run())
 
     def test_try_lock_returns_false_on_lock_not_available(self):
@@ -149,8 +169,11 @@ class TestWatchIngestionOrchestration(LegalWatchTransactionCase):
 
         with patch.object(type(self.env.cr), "execute", fake_execute):
             self.assertFalse(watch._try_lock_for_run())
-        # The failed attempt must not have poisoned the transaction: normal
-        # queries still work afterwards.
+        # EN: The failed attempt must not have poisoned the transaction:
+        # normal queries still work afterwards.
+        # FR : La tentative échouée ne doit pas avoir empoisonné la
+        # transaction : les requêtes normales fonctionnent toujours
+        # ensuite.
         self.assertTrue(watch._try_lock_for_run())
 
     def test_run_skipped_when_lock_unavailable(self):

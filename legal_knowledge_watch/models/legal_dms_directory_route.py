@@ -2,11 +2,19 @@ from odoo import fields, models
 
 
 class LegalDmsDirectoryRoute(models.Model):
-    # Maps a legal.tag (or no tag = default) to a target OCA DMS directory,
-    # per company. Deliberately independent from DMS's own tagging system:
-    # this module never assumes anything about how DMS internally organizes
-    # tags/categories, it only needs a directory id to file new content
-    # into. See services/storage_dms.py for how this is resolved.
+    # EN: Maps a legal.tag (or no tag = default) to a target OCA DMS
+    # directory, per company. Deliberately independent from DMS's own
+    # tagging system: this module never assumes anything about how DMS
+    # internally organizes tags/categories, it only needs a directory id
+    # to file new content into. See services/storage_dms.py for how this
+    # is resolved.
+    # FR: Fait correspondre un legal.tag (ou aucun tag = route par défaut)
+    # à un répertoire OCA DMS cible, par société. Volontairement
+    # indépendant du système de tags propre à DMS : ce module ne suppose
+    # jamais rien sur la façon dont DMS organise en interne ses
+    # tags/catégories, il a seulement besoin d'un identifiant de répertoire
+    # où classer le nouveau contenu. Voir services/storage_dms.py pour la
+    # résolution de cette route.
     _name = "legal.dms.directory.route"
     _description = "Legal Knowledge Watch: DMS Directory Routing"
     _order = "sequence, id"

@@ -1,6 +1,11 @@
 """Filesystem provider tests. Real local filesystem I/O against a
 tempfile.TemporaryDirectory — no mocking needed (unlike the HTTP
 providers), since there is no network involved by construction.
+
+FR : Tests du provider filesystem. Vraies entrées/sorties sur un
+tempfile.TemporaryDirectory local — aucun mock nécessaire (contrairement
+aux providers HTTP), puisqu'il n'y a aucun réseau impliqué par
+construction.
 """
 import json
 import os
@@ -92,8 +97,11 @@ class TestFilesystemJsonlProvider(LegalWatchTransactionCase):
             FilesystemJsonlProvider(provider).export_document({
                 "reference": "../../etc/passwd", "title": "x",
             })
-            # Path traversal characters must be neutralized: no file should
-            # land outside the configured directory.
+            # EN: Path traversal characters must be neutralized: no file
+            # should land outside the configured directory.
+            # FR : Les caractères de traversée de chemin doivent être
+            # neutralisés : aucun fichier ne doit atterrir hors du
+            # répertoire configuré.
             for name in os.listdir(tmp):
                 self.assertNotIn("..", name)
                 self.assertNotIn(os.sep, name)

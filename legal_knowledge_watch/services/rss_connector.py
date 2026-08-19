@@ -1,6 +1,10 @@
 """RSS/Atom connector. Never scrapes a linked article by default: only the
 feed itself is fetched unless fetch_linked_content is explicitly enabled
 for a whitelisted domain.
+
+FR : Connecteur RSS/Atom. Ne scrape jamais un article lié par défaut :
+seul le flux lui-même est récupéré, sauf si fetch_linked_content est
+explicitement activé pour un domaine autorisé.
 """
 import json
 import time
@@ -94,7 +98,9 @@ class RSSConnector(BaseConnector):
         try:
             assert_public_host(url)
         except UnsafeUrlError as exc:
-            # Config error, not a transient fetch failure: never retried.
+            # EN: Config error, not a transient fetch failure: never retried.
+            # FR : Erreur de configuration, pas un échec transitoire de
+            # récupération : jamais réessayé.
             raise ConnectorFetchError(str(exc)) from exc
 
         last_exc = None
@@ -107,10 +113,15 @@ class RSSConnector(BaseConnector):
                 if response.status_code == 304:
                     return response
                 if 300 <= response.status_code < 400:
-                    # Never silently follow a redirect: it would bypass
+                    # EN: Never silently follow a redirect: it would bypass
                     # both the domain allowlist and the SSRF host check
                     # above, which only ever validate the URL we were
                     # asked to fetch — not wherever a redirect points.
+                    # FR : Ne jamais suivre une redirection silencieusement :
+                    # cela contournerait à la fois la liste blanche de
+                    # domaines et la vérification SSRF ci-dessus, qui ne
+                    # valident jamais que l'URL demandée — pas la
+                    # destination de la redirection.
                     response.close()
                     raise ConnectorFetchError(
                         f"HTTP {response.status_code} redirect from {url} "
@@ -128,7 +139,8 @@ class RSSConnector(BaseConnector):
                         continue
                     raise last_exc
                 if response.status_code >= 400:
-                    # Permanent client error: do not retry.
+                    # EN: Permanent client error: do not retry.
+                    # FR : Erreur client permanente : ne pas réessayer.
                     response.close()
                     raise ConnectorFetchError(
                         f"HTTP {response.status_code} fetching {url}"
@@ -194,7 +206,7 @@ class RSSConnector(BaseConnector):
                 )
                 if item is not None:
                     items.append(item)
-            except Exception as exc:  # noqa: BLE001 - one bad item must not break the run
+            except Exception as exc:  # noqa: BLE001 - EN: one bad item must not break the run / FR : un élément défectueux ne doit jamais interrompre l'exécution
                 item_errors.append({
                     "title": getattr(entry, "title", None) or "(no title)",
                     "error": str(exc),

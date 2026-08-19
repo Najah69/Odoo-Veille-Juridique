@@ -53,12 +53,19 @@ class TestExportPolicyResolution(LegalWatchTransactionCase):
             "name": "This source lenient", "source_id": self.source.id,
             "min_trust_level": "low", "require_review_cleared": False,
         })
-        # self.source has trust_level='primary' by default (see common.py) —
-        # use a lower one to actually distinguish the two policies.
+        # EN: self.source has trust_level='primary' by default (see
+        # common.py) — use a lower one to actually distinguish the two
+        # policies.
+        # FR : self.source a trust_level='primary' par défaut (voir
+        # common.py) — on utilise une valeur plus basse pour distinguer
+        # réellement les deux politiques.
         self.source.trust_level = "low"
         document = self._approved_document(external_id="EXT-POLICY-4")
         allowed, reason = document._check_export_policy()
-        self.assertTrue(allowed, reason)  # source-specific (low) applies, not global (primary)
+        # EN: source-specific (low) applies, not global (primary)
+        # FR : la politique spécifique à la source (low) s'applique, pas
+        # la politique globale (primary)
+        self.assertTrue(allowed, reason)
 
     def test_require_review_cleared_blocks_when_needs_review_true(self):
         self.env["legal.export.policy"].create({

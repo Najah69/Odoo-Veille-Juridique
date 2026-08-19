@@ -3,6 +3,13 @@ shape) is this project's own design (docs/ai-providers.md), not an
 external API to reverse-engineer — any server implementing it works with
 this provider. No URL is hardcoded: base_url is entirely admin-configured
 on the legal.ai.provider record.
+
+FR : Adaptateur HTTP AI-Brain. Le contrat ci-dessous (endpoints, en-têtes,
+forme du payload) est une conception propre à ce projet
+(docs/ai-providers.md), pas une API externe à rétro-ingénierer — tout
+serveur qui l'implémente fonctionne avec ce provider. Aucune URL n'est
+codée en dur : base_url est entièrement configuré par un administrateur
+sur l'enregistrement legal.ai.provider.
 """
 from . import secrets_service
 from .ai_provider_base import AIProviderError, BaseAIProvider

@@ -3,6 +3,13 @@ the attachment-fallback scenarios are genuinely exercised end to end, while
 the DMS-specific scenarios mock exactly the boundary that would call into
 the (absent) dms.file model — see services/storage_dms.py's module
 docstring for what still needs validating against a live DMS install.
+
+FR : Tests des backends de stockage. Cet environnement n'a jamais OCA DMS
+installé, donc les scénarios de repli sur attachment sont réellement
+exercés de bout en bout, tandis que les scénarios spécifiques à DMS
+mockent exactement la frontière qui appellerait le modèle dms.file
+(absent) — voir la docstring de module de services/storage_dms.py pour ce
+qui reste encore à valider contre une vraie installation DMS.
 """
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -19,7 +26,10 @@ _DMS_CREATE_FILE = "odoo.addons.legal_knowledge_watch.services.storage_dms.DmsSt
 
 class TestStorageServiceDispatch(LegalWatchTransactionCase):
     def test_auto_mode_falls_back_to_attachment_when_dms_unavailable(self):
-        # Genuine, unmocked: DMS really isn't installed in this environment.
+        # EN: Genuine, unmocked: DMS really isn't installed in this
+        # environment.
+        # FR : Réel, sans mock : DMS n'est vraiment pas installé dans cet
+        # environnement.
         backend = storage_service.get_backend(self.env, "auto")
         self.assertEqual(backend.code, "attachment")
 
@@ -125,6 +135,10 @@ class TestDmsStorageMocked(LegalWatchTransactionCase):
     """Exercises DmsStorageBackend.store() end to end with only the actual
     dms.file creation call mocked out — everything else (routing lookup,
     return value shape) runs for real.
+
+    FR : Exerce DmsStorageBackend.store() de bout en bout, seul l'appel
+    réel de création du dms.file est mocké — tout le reste (résolution du
+    routage, forme de la valeur de retour) tourne réellement.
     """
 
     def test_store_creates_dms_file_with_resolved_directory(self):

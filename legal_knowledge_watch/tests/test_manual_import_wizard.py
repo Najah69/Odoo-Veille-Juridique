@@ -7,12 +7,20 @@ from .common import LegalWatchTransactionCase
 
 class TestManualImportWizard(LegalWatchTransactionCase):
     def test_plain_user_can_import_but_not_create_version_directly(self):
-        # Phase 7 security audit: legal.document.version write/create was
-        # removed from the User group ACL (a plain user could otherwise
-        # forge a version via raw ORM/RPC, bypassing hashing/dedup/history
-        # rules). The wizard keeps working because
+        # EN: Phase 7 security audit: legal.document.version write/create
+        # was removed from the User group ACL (a plain user could
+        # otherwise forge a version via raw ORM/RPC, bypassing
+        # hashing/dedup/history rules). The wizard keeps working because
         # create_or_update_from_candidate() now sudo()s the version
         # create/write — this test proves both halves actually hold.
+        # FR : Audit sécurité Phase 7 : l'écriture/création sur
+        # legal.document.version a été retirée des droits du groupe User
+        # (un utilisateur standard aurait sinon pu forger une version via
+        # ORM/RPC brut, en contournant le hachage/la dédup/l'historique).
+        # L'assistant continue de fonctionner car
+        # create_or_update_from_candidate() fait désormais un sudo() sur
+        # la création/écriture de la version — ce test prouve que les
+        # deux moitiés tiennent bien.
         user = self.env["res.users"].create({
             "name": "LKW Plain User",
             "login": "lkw_test_plain_user",

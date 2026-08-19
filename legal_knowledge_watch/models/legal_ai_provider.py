@@ -2,12 +2,19 @@ from odoo import fields, models
 
 
 class LegalAiProvider(models.Model):
-    # Configuration of an AI/export backend. The core module never imports
-    # anything specific to a given provider statically — dispatch happens
-    # by provider_type through services/ai_provider_registry.py, exactly
-    # like connectors. AI-Brain is one provider_type among others; a
-    # contributor can add a new one (Qdrant, OpenWebUI, filesystem JSONL...)
-    # without touching the job-processing pipeline.
+    # EN: Configuration of an AI/export backend. The core module never
+    # imports anything specific to a given provider statically — dispatch
+    # happens by provider_type through services/ai_provider_registry.py,
+    # exactly like connectors. AI-Brain is one provider_type among others;
+    # a contributor can add a new one (Qdrant, OpenWebUI, filesystem
+    # JSONL...) without touching the job-processing pipeline.
+    # FR: Configuration d'un backend IA/export. Le module cœur n'importe
+    # jamais statiquement quoi que ce soit de spécifique à un provider
+    # donné — le dispatch se fait par provider_type via
+    # services/ai_provider_registry.py, exactement comme pour les
+    # connecteurs. AI-Brain n'est qu'un provider_type parmi d'autres ; un
+    # contributeur peut en ajouter un nouveau (Qdrant, OpenWebUI, export
+    # JSONL sur disque...) sans toucher au pipeline de traitement des jobs.
     _name = "legal.ai.provider"
     _description = "Legal Knowledge Watch: AI/Export Provider"
     _order = "name"

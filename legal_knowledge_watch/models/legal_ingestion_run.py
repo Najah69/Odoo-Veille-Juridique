@@ -4,8 +4,12 @@ from odoo import api, fields, models
 
 
 class LegalIngestionRun(models.Model):
-    # Immutable execution log. In Phase 0 only 'manual' imports create runs;
-    # 'cron'/'api'/'retry' triggers are wired in when connectors are added.
+    # EN: Immutable execution log. In Phase 0 only 'manual' imports create
+    # runs; 'cron'/'api'/'retry' triggers are wired in when connectors are
+    # added.
+    # FR: Journal d'exécution immuable. En Phase 0, seuls les imports
+    # 'manual' créent des runs ; les déclencheurs 'cron'/'api'/'retry' sont
+    # câblés au fur et à mesure de l'ajout des connecteurs.
     _name = "legal.ingestion.run"
     _description = "Legal Knowledge Ingestion Run"
     _order = "started_at desc"
@@ -67,6 +71,12 @@ class LegalIngestionRun(models.Model):
         automatically here): the watch's own next scheduled/manual run
         creates a fresh, independent run — see
         legal.knowledge.document._cron_reconcile_exports().
+
+        FR : Un run resté en 'running' aussi longtemps signifie presque
+        certainement que le worker a planté en cours d'exécution. Marqué
+        'failed' (pas de nouvel essai automatique ici) : le prochain run
+        programmé ou manuel du watch en créera un nouveau, indépendant —
+        voir legal.knowledge.document._cron_reconcile_exports().
         """
         threshold = fields.Datetime.now() - timedelta(minutes=stuck_after_minutes)
         stuck = self.search([

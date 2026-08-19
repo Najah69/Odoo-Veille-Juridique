@@ -3,6 +3,13 @@ the OAuth token call and the search/consult calls): no test in this file
 reaches the network. Fixtures are inline dicts shaped per
 docs/legifrance-piste.md's confirmed schema, not separate files (see that
 document for why).
+
+FR : Tests du connecteur Légifrance/PISTE. Chaque test mocke
+requests.post (à la fois l'appel du jeton OAuth et les appels
+search/consult) : aucun test de ce fichier n'atteint le réseau. Les
+fixtures sont des dicts en ligne conformes au schéma confirmé de
+docs/legifrance-piste.md, pas des fichiers séparés (voir ce document pour
+le pourquoi).
 """
 import json as jsonlib
 import os
@@ -103,9 +110,13 @@ class TestPisteOAuthClient(LegalWatchTransactionCase):
                 client.get_token()
 
     def test_get_token_redirect_is_not_followed(self):
-        # A followed redirect would send client_secret to whatever host it
-        # points to — must be a hard failure, and allow_redirects=False
-        # must actually be passed to requests.post.
+        # EN: A followed redirect would send client_secret to whatever
+        # host it points to — must be a hard failure, and
+        # allow_redirects=False must actually be passed to requests.post.
+        # FR : Une redirection suivie enverrait client_secret vers
+        # n'importe quel hôte cible — cela doit être un échec dur, et
+        # allow_redirects=False doit réellement être passé à
+        # requests.post.
         redirect_response = _FakeResponse(302, headers={"Location": "http://evil.example/"})
         with patch(_TOKEN_PATCH, return_value=redirect_response) as mock_post:
             client = PisteOAuthClient("id", "secret", "sandbox")

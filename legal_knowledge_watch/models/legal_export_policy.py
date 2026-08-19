@@ -1,17 +1,27 @@
 from odoo import api, fields, models
 
-# Ordered so "at least X" comparisons are simple integer comparisons.
+# EN: Ordered so "at least X" comparisons are simple integer comparisons.
+# FR: Ordonné pour que les comparaisons « au moins X » soient de simples
+# comparaisons d'entiers.
 TRUST_LEVEL_ORDER = {"low": 0, "medium": 1, "high": 2, "primary": 3}
 
 
 class LegalExportPolicy(models.Model):
-    # Configurable refinement on top of the non-negotiable export floor
+    # EN: Configurable refinement on top of the non-negotiable export floor
     # (approved, current, non-empty text, canonical_url and content_hash
     # present — enforced unconditionally in
     # legal.knowledge.document._check_export_policy(), never here). The
     # most specific matching policy (by company/source/watch) wins; with
     # no matching policy at all, the Phase 4 default (min trust_level
     # 'high') applies — see _resolve() below.
+    # FR: Raffinement configurable au-dessus du plancher d'export non
+    # négociable (approuvé, courant, texte non vide, canonical_url et
+    # content_hash présents — imposé sans condition dans
+    # legal.knowledge.document._check_export_policy(), jamais ici). La
+    # politique correspondante la plus spécifique (par société/source/
+    # veille) l'emporte ; en l'absence de politique correspondante, le
+    # défaut de la Phase 4 (trust_level minimum 'high') s'applique — voir
+    # _resolve() ci-dessous.
     _name = "legal.export.policy"
     _description = "Legal Knowledge Watch: Export Policy"
     _order = "sequence, id"
@@ -53,6 +63,11 @@ class LegalExportPolicy(models.Model):
         """Return the most specific active policy matching this document's
         company/source/watch, or an empty recordset if none is configured
         (caller falls back to the Phase 4 default in that case).
+
+        FR : Renvoie la politique active la plus spécifique correspondant
+        à la société/source/veille de ce document, ou un recordset vide si
+        aucune n'est configurée (l'appelant retombe alors sur le défaut de
+        la Phase 4).
         """
         domain = [
             "|", ("company_id", "=", False), ("company_id", "=", document.company_id.id),

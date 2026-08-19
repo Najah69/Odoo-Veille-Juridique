@@ -2,6 +2,12 @@
 with an "action" discriminator. Intended as the simplest possible example
 of implementing BaseAIProvider — a contributor building a Qdrant/
 OpenWebUI/filesystem provider can use this as a template.
+
+FR : Fournisseur webhook générique minimal : une seule URL, une forme de
+corps JSON unique avec un discriminant "action". Pensé comme l'exemple
+le plus simple possible d'implémentation de BaseAIProvider — un
+contributeur qui construit un fournisseur Qdrant/OpenWebUI/filesystem
+peut s'en servir comme modèle.
 """
 from . import secrets_service
 from .ai_provider_base import AIProviderError, BaseAIProvider

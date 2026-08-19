@@ -9,6 +9,19 @@ the HTTP-based providers.
 classify() is intentionally unsupported (raises AIProviderError): a flat
 file sink has nothing to classify against — enable_for_classification
 should stay False for this provider_type.
+
+FR : Provider d'export filesystem : un fichier JSON par document
+(`<répertoire>/<reference>.json`), pour qu'un index local puisse être
+reconstruit sans AI-Brain ni aucun autre service réseau — `cat *.json`
+(ou un petit script encapsulant chaque fichier sur une ligne) reconstruit
+un corpus JSONL. L'écriture écrase toujours le fichier pour cette
+référence, ce qui rend l'« upsert » trivialement idempotent — aucun
+mécanisme séparé d'Idempotency-Key n'est nécessaire ici, contrairement
+aux providers HTTP.
+
+classify() est volontairement non supporté (lève AIProviderError) : un
+simple dépôt de fichiers n'a rien contre quoi classifier —
+enable_for_classification doit rester à False pour ce provider_type.
 """
 import json
 import os
@@ -19,11 +32,17 @@ from .ai_provider_registry import register_provider
 
 
 def _safe_filename(reference):
-    # Strip path separators first, then collapse any run of dots down to a
+    # EN: Strip path separators first, then collapse any run of dots down to a
     # single one: without this second step, e.g. "../../etc/passwd" would
     # sanitize to the merely-odd-looking (but not actually traversal-
     # capable, since no separator survives) ".._.._etc_passwd" — collapsing
     # dots avoids leaving that confusing residue at all.
+    # FR : Retire d'abord les séparateurs de chemin, puis réduit toute
+    # suite de points à un seul : sans cette seconde étape,
+    # "../../etc/passwd" se réduirait à ".._.._etc_passwd" — bizarre à
+    # voir (mais sans réel risque de traversée puisque aucun séparateur
+    # ne survit) — réduire les points évite même de laisser ce résidu
+    # déroutant.
     safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", reference)
     safe = re.sub(r"\.{2,}", ".", safe)
     return safe + ".json"

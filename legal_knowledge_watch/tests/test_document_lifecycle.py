@@ -53,7 +53,8 @@ class TestIngestCandidate(LegalWatchTransactionCase):
             external_id="EXT-DIFFERENT",
             title="Titre différent",
         )
-        # same plain_text as `candidate` by default from _candidate()
+        # EN: same plain_text as `candidate` by default from _candidate()
+        # FR : même plain_text que `candidate` par défaut, via _candidate()
         result = self.env["legal.knowledge.document"]._ingest_candidate(
             cross_source_candidate
         )
@@ -68,8 +69,10 @@ class TestIngestCandidate(LegalWatchTransactionCase):
     def test_external_id_unique_per_source_sql_constraint(self):
         candidate = self._candidate(external_id="EXT-104")
         self.env["legal.knowledge.document"]._ingest_candidate(candidate)
-        # A direct create() bypassing the ingestion service must still be
-        # blocked by the SQL constraint.
+        # EN: A direct create() bypassing the ingestion service must still
+        # be blocked by the SQL constraint.
+        # FR : Un create() direct qui contourne le service d'ingestion doit
+        # quand même être bloqué par la contrainte SQL.
         with self.assertRaises(Exception):
             with self.env.cr.savepoint():
                 self.env["legal.knowledge.document"].create({

@@ -7,6 +7,17 @@ against the open-source pylegifrance client (github.com/rdassignies/
 pylegifrance, pylegifrance/auth.py) — not the official Swagger UI directly
 (that requires a PISTE account), but a real, independently working
 implementation of the same flow. See docs/legifrance-piste.md.
+
+FR : Client Credentials OAuth2 contre PISTE. Les hôtes de token ont été
+confirmés en direct via le catalogue public des API PISTE
+(piste.gouv.fr/api-catalog-sandbox, 2026-08-19) : oauth.piste.gouv.fr
+(production) / sandbox-oauth.piste.gouv.fr (bac à sable). Le flux
+d'octroi (grant_type=client_credentials, encodé en formulaire,
+scope=openid, réponse JSON avec access_token/expires_in) a été recoupé
+avec le client open source pylegifrance (github.com/rdassignies/
+pylegifrance, pylegifrance/auth.py) — pas directement le Swagger officiel
+(qui exige un compte PISTE), mais une implémentation réelle et
+indépendante fonctionnelle du même flux. Voir docs/legifrance-piste.md.
 """
 import time
 
@@ -21,6 +32,9 @@ TOKEN_EXPIRY_SAFETY_MARGIN_SECONDS = 30
 class PisteOAuthTokenError(Exception):
     """Raised for any failure to obtain a token. Never includes the
     client_secret in its message.
+
+    FR : Levée pour tout échec d'obtention d'un token. Ne doit jamais
+    inclure le client_secret dans son message.
     """
 
 
@@ -33,8 +47,11 @@ class PisteOAuthClient:
             SANDBOX_TOKEN_URL if environment == "sandbox" else PRODUCTION_TOKEN_URL
         )
         self._timeout = timeout
-        # In-memory only, per connector-instance lifetime — never persisted,
-        # never shared across runs (see docs/legifrance-piste.md).
+        # EN: In-memory only, per connector-instance lifetime — never
+        # persisted, never shared across runs (see docs/legifrance-piste.md).
+        # FR : Uniquement en mémoire, pour la durée de vie de l'instance du
+        # connecteur — jamais persisté, jamais partagé entre exécutions
+        # (voir docs/legifrance-piste.md).
         self._token = None
         self._expires_at = 0.0
 
@@ -49,8 +66,10 @@ class PisteOAuthClient:
             "scope": "openid",
         }
         try:
-            # allow_redirects=False: a followed redirect would send
+            # EN: allow_redirects=False: a followed redirect would send
             # client_secret to whatever host it points to.
+            # FR : allow_redirects=False : suivre une redirection enverrait
+            # client_secret vers l'hôte pointé par cette redirection.
             response = requests.post(
                 self._token_url, data=data, timeout=self._timeout,
                 allow_redirects=False,

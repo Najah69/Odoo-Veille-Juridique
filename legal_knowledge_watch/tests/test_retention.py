@@ -74,7 +74,8 @@ class TestRetentionArchive(LegalWatchTransactionCase):
         self.env["legal.knowledge.document"]._cron_apply_retention(dry_run=False)
         report_2 = self.env["legal.knowledge.document"]._cron_apply_retention(dry_run=False)
 
-        # Already archived -> no longer matches the 'rejected' domain.
+        # EN: Already archived -> no longer matches the 'rejected' domain.
+        # FR : Déjà archivé -> ne correspond plus au domaine 'rejected'.
         self.assertNotIn(document.reference, report_2["archived"])
         self.assertEqual(document.status, "archived")
 
@@ -136,8 +137,11 @@ class TestRetentionPurge(LegalWatchTransactionCase):
 
         self.assertFalse(old_version.attachment_id)
         self.assertFalse(self.env["ir.attachment"].browse(old_attachment_id).exists())
-        # The current version's content and the document/version rows
+        # EN: The current version's content and the document/version rows
         # themselves are never touched by retention.
+        # FR : Le contenu de la version courante et les enregistrements
+        # document/version eux-mêmes ne sont jamais touchés par la
+        # rétention.
         self.assertTrue(document.current_version_id.attachment_id)
         self.assertTrue(document.current_version_id.attachment_id.exists())
         self.assertEqual(document.version_count, 2)
@@ -162,6 +166,9 @@ class TestRetentionPurge(LegalWatchTransactionCase):
             "EXT-PURGE-4", archived_days_old=40
         )
         self.env["legal.knowledge.document"]._cron_apply_retention(dry_run=False)
-        # Second run must not error even though the binary is already gone.
+        # EN: Second run must not error even though the binary is already
+        # gone.
+        # FR : Le second passage ne doit pas échouer même si le binaire a
+        # déjà disparu.
         report_2 = self.env["legal.knowledge.document"]._cron_apply_retention(dry_run=False)
         self.assertFalse(report_2["purged_versions"])

@@ -45,8 +45,10 @@ class TestDeduplicationService(LegalWatchTransactionCase):
         self.assertIsNone(match_type)
 
     def test_external_id_takes_precedence_over_url(self):
-        # Same source, different external_id but same canonical_url would
+        # EN: Same source, different external_id but same canonical_url would
         # normally match by URL; external_id must be checked first.
+        # FR : Même source, external_id différent mais même canonical_url —
+        # correspondrait normalement par URL ; external_id doit primer.
         found, match_type = deduplication_service.find_existing_document(
             self.env, source_id=self.source.id, external_id="EXT-001",
             canonical_url="https://example.com/decret-1",

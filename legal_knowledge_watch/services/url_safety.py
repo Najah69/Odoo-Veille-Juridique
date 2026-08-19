@@ -12,6 +12,24 @@ a provider's base_url directly at `127.0.0.1`, `169.254.169.254`, an
 RFC1918 address, etc.) but *not* a hostname that resolves to a private
 address — for RSS, the `allowed_domains` allowlist is the real control
 for that; there is no equivalent for AI provider base_url in this phase.
+
+FR : Durcissement anti-SSRF partagé par tout appel HTTP sortant vers une
+URL configurée par un administrateur (feed_url et fetch_linked_content
+pour RSS, base_url pour un fournisseur IA). Voir docs/security.md.
+
+Vérifie volontairement uniquement la **chaîne de caractères** de l'hôte —
+ne résout jamais de DNS. Deux raisons : (1) une vérification basée sur le
+DNS ne protège que jusqu'à la prochaine résolution de toute façon (DNS
+rebinding), donc l'apport est limité ; (2) résoudre le DNS ici rendrait
+chaque test qui va chercher une URL factice en `*.example.org`
+dépendante d'un accès réseau réel, ce qui casserait la règle du projet
+« les tests ne touchent jamais le réseau ». Ceci bloque l'attaque
+courante et grossière (pointer feed_url ou le base_url d'un fournisseur
+directement vers `127.0.0.1`, `169.254.169.254`, une adresse RFC1918,
+etc.) mais *pas* un nom d'hôte qui se résout vers une adresse privée —
+pour RSS, la liste blanche `allowed_domains` est le vrai contrôle pour ce
+cas ; il n'existe pas d'équivalent pour le base_url d'un fournisseur IA
+à ce stade du projet.
 """
 import ipaddress
 from urllib.parse import urlsplit

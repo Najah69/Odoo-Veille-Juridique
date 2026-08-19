@@ -2,6 +2,12 @@
 every legal.document.enrichment created from that template, so a template
 edit here always produces a *new* version id rather than silently
 reinterpreting old enrichments under a changed prompt.
+
+FR : Modèles de prompt versionnés. `prompt_version` ci-dessous est stocké
+tel quel sur chaque legal.document.enrichment créé à partir de ce modèle,
+si bien qu'une modification de modèle ici produit toujours un *nouvel*
+identifiant de version plutôt que de réinterpréter silencieusement
+d'anciens enrichissements sous un prompt changé.
 """
 
 LEGAL_SUMMARY_CLASSIFICATION_FR_V1 = {
@@ -93,6 +99,11 @@ def render_prompt(template_dict, **context):
     """Render a template dict (see above) with the given context, defaulting
     any missing key to an empty string rather than raising — a missing
     metadata field must never block a classification attempt.
+
+    FR : Rend un dict de modèle (voir ci-dessus) avec le contexte donné,
+    en remplaçant toute clé manquante par une chaîne vide plutôt que de
+    lever une exception — un champ de métadonnée manquant ne doit jamais
+    bloquer une tentative de classification.
     """
     from collections import defaultdict
 

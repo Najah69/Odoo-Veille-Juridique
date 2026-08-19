@@ -26,6 +26,40 @@ IS confirmed, but wasn't seen literally in either source) and the exact
 shape of a live HTTP response (only the Pydantic schema was inspected, no
 live call was made — no PISTE credentials are available in this
 environment). Test this against a real sandbox account before production.
+
+FR : Connecteur Légifrance/PISTE — collection LODA uniquement à ce stade
+(Lois, Ordonnances, Décrets, Arrêtés).
+
+Ancrage : aucune interface Swagger PISTE n'était directement accessible
+dans cet environnement (elle nécessite un compte PISTE enregistré). Tout
+ce qui suit a été vérifié contre deux sources réelles, indépendantes et à
+jour, plutôt que deviné — voir docs/legifrance-piste.md pour le détail
+complet du niveau de confiance :
+
+1. Le catalogue public des API PISTE (piste.gouv.fr/api-catalog-sandbox,
+   vérifié le 2026-08-19, sans connexion requise) : confirme que l'API
+   Légifrance y existe, ses noms d'hôte OAuth/API, et que des spécifications
+   Swagger 2.0/3.0 sont attachées par API (non téléchargeables directement
+   sans compte).
+2. github.com/rdassignies/pylegifrance (MIT, open source, activement
+   maintenu) : son fichier pylegifrance/models/generated/model.py est
+   *généré mécaniquement* par datamodel-codegen à partir d'un fichier
+   nommé legifrance.json daté du 2025-05-28 — c'est-à-dire un vrai
+   instantané de la spécification OpenAPI réelle de la DILA, pas des
+   suppositions écrites à la main. Les routes d'endpoint, les DTO de
+   requête (SearchRequestDTO/ChampDTO/CritereDTO/FiltreDTO), les énums
+   (Fond/TypeChamp/TypeRecherche/Operateur/Nature2/Sort1) et les modèles
+   de réponse (ConsultTextResponse/ConsultArticle/ConsultSection) ont été
+   lus directement depuis ce fichier.
+
+Ce qui n'est PAS confirmé de façon indépendante : le chemin de base de
+l'API sandbox (SANDBOX_API_URL ci-dessous reprend le même schéma de
+chemin que la production, qui EST confirmée, mais cette combinaison n'a
+pas été observée littéralement dans l'une ou l'autre source) et la forme
+exacte d'une réponse HTTP en direct (seul le schéma Pydantic a été
+inspecté, aucun appel réel n'a été fait — aucun identifiant PISTE n'est
+disponible dans cet environnement). À tester contre un vrai compte
+sandbox avant la production.
 """
 import json
 import logging
@@ -47,11 +81,15 @@ from .piste_oauth_client import PisteOAuthClient, PisteOAuthTokenError
 
 _logger = logging.getLogger(__name__)
 
-# Confirmed live (piste-gouv.fr/api-catalog-sandbox, 2026-08-19).
+# EN: Confirmed live (piste-gouv.fr/api-catalog-sandbox, 2026-08-19).
+# FR : Confirmé en direct (piste-gouv.fr/api-catalog-sandbox, 2026-08-19).
 PRODUCTION_API_URL = "https://api.piste.gouv.fr/dila/legifrance/lf-engine-app/"
-# Same path pattern as production (confirmed), sandbox- host prefix
+# EN: Same path pattern as production (confirmed), sandbox- host prefix
 # (confirmed to exist for OAuth) — the combination was not independently
 # observed together. See module docstring.
+# FR : Même schéma de chemin que la production (confirmé), préfixe d'hôte
+# sandbox- (confirmé pour OAuth) — la combinaison des deux n'a pas été
+# observée de façon indépendante. Voir la docstring de module.
 SANDBOX_API_URL = "https://sandbox-api.piste.gouv.fr/dila/legifrance/lf-engine-app/"
 
 DEFAULT_TIMEOUT_SECONDS = 20
@@ -60,12 +98,19 @@ DEFAULT_LOOKBACK_DAYS_FIRST_RUN = 7
 DEFAULT_MAX_RESPONSE_BYTES = 5_000_000
 MAX_RETRIES = 3
 RETRY_BACKOFF_SECONDS = 1
-PISTE_MAX_PAGE_SIZE = 100  # per the generated model's own field description
+# EN: per the generated model's own field description
+# FR : selon la description du champ dans le modèle généré
+PISTE_MAX_PAGE_SIZE = 100
 
-# Our document_type (Phase 0 selection) <- PISTE Nature2 enum value.
+# EN: Our document_type (Phase 0 selection) <- PISTE Nature2 enum value.
 # ORDONNANCE has no clean single English equivalent in our coarse
 # selection; mapped to "decree" (ordonnances function as decree-laws in
 # French law) rather than inventing a new document_type value here.
+# FR : Notre document_type (choix de la Phase 0) <- valeur de l'énum
+# Nature2 de PISTE. ORDONNANCE n'a pas d'équivalent anglais simple et
+# unique dans notre sélection grossière ; mappé sur "decree" (les
+# ordonnances fonctionnent comme des decree-laws en droit français)
+# plutôt que d'inventer une nouvelle valeur document_type ici.
 _NATURE_TO_DOCUMENT_TYPE = {
     "LOI": "law",
     "DECRET": "decree",
@@ -84,6 +129,13 @@ def _parse_piste_datetime(value):
     '2021-04-15T16:49:47.707+0000', per ChronolegiResponse.datePublication
     in the generated model). Never raises: returns None on any unexpected
     format so a date-parsing quirk never drops a candidate.
+
+    FR : Parsing best-effort d'une chaîne datetime PISTE (format observé :
+    '2021-04-15T16:49:47.707+0000', selon
+    ChronolegiResponse.datePublication dans le modèle généré). Ne lève
+    jamais d'exception : retourne None sur tout format inattendu, pour
+    qu'une bizarrerie de format de date ne fasse jamais perdre un
+    candidat.
     """
     if not value or not isinstance(value, str):
         return None
@@ -228,10 +280,15 @@ class LegifranceConnector(BaseConnector):
                 raise last_exc from exc
 
             if 300 <= response.status_code < 400:
-                # PRODUCTION_API_URL/SANDBOX_API_URL are hardcoded constants
+                # EN: PRODUCTION_API_URL/SANDBOX_API_URL are hardcoded constants
                 # (no admin-configurable SSRF surface here), but a redirect
                 # still must never be followed silently — it would send the
                 # PISTE bearer token to an arbitrary host.
+                # FR : PRODUCTION_API_URL/SANDBOX_API_URL sont des constantes
+                # codées en dur (pas de surface SSRF configurable par un
+                # admin ici), mais une redirection ne doit quand même
+                # jamais être suivie silencieusement — elle enverrait le
+                # token bearer PISTE vers un hôte arbitraire.
                 raise ConnectorFetchError(
                     f"HTTP {response.status_code} redirect from {url} was "
                     f"not followed (redirects are disabled for safety)."
@@ -315,7 +372,7 @@ class LegifranceConnector(BaseConnector):
                     result, api_url, token, config, timeout
                 )
                 items.append(item)
-            except Exception as exc:  # noqa: BLE001 - one bad item must not break the run
+            except Exception as exc:  # noqa: BLE001 - EN: one bad item must not break the run / FR : un élément défectueux ne doit jamais interrompre l'exécution
                 item_errors.append({
                     "title": result.get("title") or "(no title)",
                     "error": str(exc),
@@ -358,10 +415,15 @@ class LegifranceConnector(BaseConnector):
                 plain_text = extracted
             published_at = _parse_piste_datetime(consult_response.get("dateParution"))
         except ConnectorFetchError as exc:
-            # Full-text retrieval failing must not drop the candidate: keep
+            # EN: Full-text retrieval failing must not drop the candidate: keep
             # the title-only version and flag it for review downstream via
             # source_metadata, matching the PDF-extraction fallback pattern
             # used by the manual-import wizard.
+            # FR : Un échec de récupération du texte intégral ne doit
+            # jamais faire perdre le candidat : on garde la version
+            # titre-seul et on la marque pour revue en aval via
+            # source_metadata, ce qui reprend le schéma de repli utilisé
+            # pour l'extraction PDF dans l'assistant d'import manuel.
             consult_error = str(exc)
             _logger.warning("Légifrance consult/lawDecree failed for %s: %s", text_id, exc)
 
@@ -390,6 +452,12 @@ class LegifranceConnector(BaseConnector):
         real generated Pydantic models — see module docstring. Never
         raises: returns None on any unexpected shape so the caller falls
         back to the title.
+
+        FR : Parcourt articles/sections récursivement, en concaténant
+        ConsultArticle.content (HTML). Noms de champs confirmés contre les
+        vrais modèles Pydantic générés — voir la docstring de module. Ne
+        lève jamais d'exception : retourne None sur toute forme
+        inattendue, pour que l'appelant se replie sur le titre.
         """
         try:
             html_parts = []
@@ -411,5 +479,5 @@ class LegifranceConnector(BaseConnector):
             if not html_parts:
                 return None
             return normalize_service.html_to_text(" ".join(html_parts))
-        except Exception:  # noqa: BLE001 - extraction is always best-effort
+        except Exception:  # noqa: BLE001 - EN: extraction is always best-effort / FR : l'extraction est toujours best-effort
             return None

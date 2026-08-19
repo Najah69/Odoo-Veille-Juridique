@@ -10,7 +10,9 @@ from .legal_export_policy import TRUST_LEVEL_ORDER
 
 _logger = logging.getLogger(__name__)
 
-# Allowed status transitions (see docs/architecture.md - document lifecycle).
+# EN: Allowed status transitions (see docs/architecture.md - document lifecycle).
+# FR: Transitions de statut autorisées (voir docs/architecture.md — cycle
+# de vie du document).
 _ALLOWED_TRANSITIONS = {
     "new": {"qualified", "review", "rejected"},
     "qualified": {"approved", "review", "rejected"},
@@ -23,9 +25,14 @@ _ALLOWED_TRANSITIONS = {
 
 
 class LegalKnowledgeDocument(models.Model):
-    # Business source of truth for one collected piece of legal content.
-    # Never confuse this with its storage backend (ir.attachment today,
-    # optionally OCA DMS in a later phase): those only hold the bytes.
+    # EN: Business source of truth for one collected piece of legal
+    # content. Never confuse this with its storage backend (ir.attachment
+    # today, optionally OCA DMS in a later phase): those only hold the
+    # bytes.
+    # FR: Source de vérité métier pour un contenu juridique collecté.
+    # Jamais à confondre avec son backend de stockage (ir.attachment
+    # aujourd'hui, optionnellement OCA DMS dans une phase ultérieure) :
+    # ceux-ci ne font que porter les octets.
     _name = "legal.knowledge.document"
     _description = "Legal Knowledge Document"
     _inherit = ["mail.thread", "mail.activity.mixin"]
@@ -241,6 +248,12 @@ class LegalKnowledgeDocument(models.Model):
         for classification. Classification is opt-in/manual in this phase
         (unlike export, which auto-queues on approval) — see
         docs/ai-providers.md.
+
+        FR : Déclenchement manuel : met en file un job de classification
+        pour chaque provider activé pour la classification. La
+        classification est optionnelle/manuelle à ce stade (contrairement
+        à l'export, mis en file automatiquement à l'approbation) — voir
+        docs/ai-providers.md.
         """
         providers = self.env["legal.ai.provider"].search([
             ("active", "=", True), ("enabled_for_classification", "=", True),
@@ -260,6 +273,13 @@ class LegalKnowledgeDocument(models.Model):
         fresh when the job actually runs, not frozen at approval time);
         export_state is set to 'queued' immediately so the UI reflects
         that *something* is pending even before the cron picks it up.
+
+        FR : Appelée à l'approbation. Crée toujours le job (afin que la
+        politique d'export — trust_level/is_current/texte non vide — soit
+        revérifiée à chaque exécution réelle du job, jamais figée au
+        moment de l'approbation) ; export_state passe immédiatement à
+        'queued' pour que l'UI reflète qu'*une action* est en attente,
+        même avant que le cron ne la traite.
         """
         providers = self.env["legal.ai.provider"].search([
             ("active", "=", True), ("enabled_for_export", "=", True),
@@ -284,6 +304,16 @@ class LegalKnowledgeDocument(models.Model):
         legal.export.policy (company/source/watch) — or the Phase 4
         default (min trust_level 'high') if none is configured — adds
         trust_level/review/score/length gates. Returns (allowed: bool,
+        reason: str|None).
+
+        FR : Politique d'export fail-closed. Le plancher ci-dessous est
+        inconditionnel et ne peut être assoupli par aucun enregistrement
+        legal.export.policy : approuvé, courant, canonical_url et
+        content_hash présents, texte non vide. Au-dessus de ce plancher,
+        le legal.export.policy correspondant le plus spécifique
+        (société/source/veille) — ou le défaut de la Phase 4 (trust_level
+        minimum 'high') si aucun n'est configuré — ajoute des contraintes
+        de confiance/revue/score/longueur. Renvoie (allowed: bool,
         reason: str|None).
         """
         self.ensure_one()
@@ -402,6 +432,19 @@ class LegalKnowledgeDocument(models.Model):
 
         Returns a dict: {"document": recordset, "version": recordset or
         empty, "result": "created" | "new_version" | "duplicate"}.
+
+        FR : Crée ou met à jour un document à partir d'un dict candidat
+        normalisé.
+
+        Clés attendues : source_id (requis), watch_id, external_id,
+        source_url, canonical_url, title, published_at, document_type,
+        authority, jurisdiction, language, tag_ids (liste d'ids),
+        source_metadata_json, plain_text, mime_type, attachment_vals
+        (dict passé à ir.attachment.create, optionnel), needs_review,
+        default_status (statut à appliquer à un document tout neuf).
+
+        Renvoie un dict : {"document": recordset, "version": recordset ou
+        vide, "result": "created" | "new_version" | "duplicate"}.
         """
         plain_text = normalize_service.normalize_whitespace(
             candidate.get("plain_text") or ""
@@ -420,10 +463,14 @@ class LegalKnowledgeDocument(models.Model):
         )
 
         if match_type == "content_hash":
-            # Identical normalized content already stored, under a document
-            # that this candidate's (source, external_id/canonical_url)
-            # does not identify: treat as a duplicate, do not create a
-            # second document or version.
+            # EN: Identical normalized content already stored, under a
+            # document that this candidate's (source, external_id/
+            # canonical_url) does not identify: treat as a duplicate, do
+            # not create a second document or version.
+            # FR: Contenu normalisé identique déjà stocké, sous un document
+            # que le (source, external_id/canonical_url) de ce candidat
+            # n'identifie pas : traité comme un doublon, aucun second
+            # document ni version n'est créé.
             return {
                 "document": existing,
                 "version": self.env["legal.document.version"].browse(),
@@ -440,9 +487,13 @@ class LegalKnowledgeDocument(models.Model):
             version = self._create_new_version(existing, candidate, plain_text, content_hash)
             return {"document": existing, "version": version, "result": "new_version"}
 
-        # Wrapped in a savepoint so a storage failure (e.g. storage_mode
+        # EN: Wrapped in a savepoint so a storage failure (e.g. storage_mode
         # 'dms' requested without DMS installed) cannot leave an orphan
         # document with zero versions: either both succeed, or neither does.
+        # FR: Enveloppé dans un savepoint pour qu'un échec de stockage (ex :
+        # storage_mode 'dms' demandé sans DMS installé) ne puisse jamais
+        # laisser un document orphelin sans aucune version : soit les deux
+        # réussissent, soit aucun des deux.
         with self.env.cr.savepoint():
             document = self.create({
                 "name": candidate["title"],
@@ -469,11 +520,19 @@ class LegalKnowledgeDocument(models.Model):
                 document, candidate.get("attachment_vals"),
                 candidate.get("storage_mode", "auto"),
             )
-            # sudo(): legal.document.version create/write is restricted to
-            # Reviewer+ (see ir.model.access.csv, Phase 7 security audit) so
-            # a plain User can't forge a version directly via the ORM/RPC —
-            # this centralized method is the only sanctioned creation path,
-            # reached from the manual-import wizard and every connector.
+            # EN: sudo(): legal.document.version create/write is restricted
+            # to Reviewer+ (see ir.model.access.csv, Phase 7 security audit)
+            # so a plain User can't forge a version directly via the
+            # ORM/RPC — this centralized method is the only sanctioned
+            # creation path, reached from the manual-import wizard and
+            # every connector.
+            # FR: sudo() : la création/écriture de legal.document.version
+            # est restreinte à Reviewer+ (voir ir.model.access.csv, audit
+            # sécurité Phase 7) afin qu'un simple User ne puisse pas forger
+            # une version directement via l'ORM/RPC — cette méthode
+            # centralisée est le seul chemin de création sanctionné,
+            # atteint depuis l'assistant d'import manuel et chaque
+            # connecteur.
             version = self.env["legal.document.version"].sudo().create({
                 "document_id": document.id,
                 "sequence": 1,
@@ -488,7 +547,8 @@ class LegalKnowledgeDocument(models.Model):
 
     def _create_new_version(self, document, candidate, plain_text, content_hash):
         with self.env.cr.savepoint():
-            # sudo(): see the matching note in create_or_update_from_candidate().
+            # EN: sudo(): see the matching note in create_or_update_from_candidate().
+            # FR: sudo() : voir la note équivalente dans create_or_update_from_candidate().
             document.current_version_id.sudo().write({"is_current": False})
             next_sequence = (
                 max(document.version_ids.mapped("sequence")) + 1
@@ -510,21 +570,32 @@ class LegalKnowledgeDocument(models.Model):
                 "is_current": True,
                 **storage_vals,
             })
-            # sudo(): User/Reviewer only have perm_write=0 on
+            # EN: sudo(): User/Reviewer only have perm_write=0 on
             # legal.knowledge.document (see ir.model.access.csv) — these
             # writes only ever touch fields this method itself computed
             # (content_hash/relevance_score) or a derived state flag, never
             # user-supplied values, so sudo() here doesn't reopen a gap.
+            # FR: sudo() : User/Reviewer n'ont que perm_write=0 sur
+            # legal.knowledge.document (voir ir.model.access.csv) — ces
+            # écritures ne touchent jamais que des champs calculés par
+            # cette méthode elle-même (content_hash/relevance_score) ou un
+            # indicateur d'état dérivé, jamais des valeurs fournies par
+            # l'utilisateur, donc ce sudo() ne rouvre aucune faille.
             document.sudo().write({
                 "content_hash": content_hash,
                 "last_checked_at": fields.Datetime.now(),
                 "relevance_score": candidate.get("relevance_score", document.relevance_score),
             })
             if document.export_state == "exported":
-                # The previously exported copy no longer matches the
+                # EN: The previously exported copy no longer matches the
                 # current content — flag it rather than silently leaving
                 # a stale export_state='exported'. Reconciliation
                 # (_cron_reconcile_exports) re-queues a fresh export.
+                # FR: La copie précédemment exportée ne correspond plus au
+                # contenu actuel — on la signale plutôt que de laisser
+                # silencieusement un export_state='exported' périmé. La
+                # réconciliation (_cron_reconcile_exports) remet un export
+                # frais en file.
                 document.sudo().export_state = "stale"
         document.message_post(
             body=self.env._(
@@ -539,6 +610,14 @@ class LegalKnowledgeDocument(models.Model):
         Returns legal.document.version field values (storage_backend +
         backend-specific id field), defaulting the unused id field to False
         so callers can always unpack the dict the same way.
+
+        FR : Délègue au backend de stockage configuré (ir.attachment ou
+        OCA DMS si installé et demandé — voir
+        services/storage_service.py). Renvoie les valeurs de champ
+        legal.document.version (storage_backend + champ id propre au
+        backend), avec le champ id inutilisé mis à False par défaut afin
+        que les appelants puissent toujours décomposer le dict de la même
+        façon.
         """
         if not attachment_vals:
             return {
@@ -559,6 +638,12 @@ class LegalKnowledgeDocument(models.Model):
         derived, reconstructible projection. This detects drift between
         the two and repairs it — never by deleting local history, only by
         (re)queuing jobs or flagging state. See docs/operations.md.
+
+        FR : Odoo/DMS est le registre durable ; tout index RAG/export en
+        est une projection dérivée, reconstructible. Ceci détecte l'écart
+        entre les deux et le répare — jamais en supprimant l'historique
+        local, uniquement en (re)mettant des jobs en file ou en signalant
+        un état. Voir docs/operations.md.
         """
         self._reconcile_superseded_but_exported()
         self._reconcile_missing_exports(batch_size)
@@ -630,6 +715,14 @@ class LegalKnowledgeDocument(models.Model):
         the binary content of non-current versions on already-archived
         documents. The current version and every metadata row are always
         kept.
+
+        FR : dry_run=True (ou l'action serveur « Rétention (essai à
+        blanc) ») journalise ce qui SE PASSERAIT sans rien écrire. Voir
+        legal.retention.policy et docs/operations.md — ceci ne fait
+        jamais qu'archiver (changement de statut réversible) et, bien
+        après, purger le contenu binaire des versions non courantes sur
+        des documents déjà archivés. La version courante et toute ligne
+        de métadonnées sont toujours conservées.
         """
         report = {"archived": [], "purged_versions": []}
         self._apply_retention_archive(report, dry_run, batch_size)

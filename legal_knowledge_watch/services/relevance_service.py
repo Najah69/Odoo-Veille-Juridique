@@ -1,5 +1,9 @@
 """Deterministic, explainable relevance rules — evaluated before any AI
 involvement. See docs/connectors.md for the field/operator/effect contract.
+
+FR : Règles de pertinence déterministes et explicables — évaluées avant
+toute intervention de l'IA. Voir docs/connectors.md pour le contrat
+champ/opérateur/effet.
 """
 import re
 
