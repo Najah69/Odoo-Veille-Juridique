@@ -9,6 +9,105 @@ a locally-owned document history.
 > **This is a documentation and monitoring tool. It does not provide legal,
 > tax or accounting advice, and it does not replace consultation with a
 > qualified lawyer, accountant or other professional.**
+>
+> **Ceci est un outil de documentation et de veille. Il ne fournit aucun
+> conseil juridique, fiscal ou comptable, et ne remplace pas la
+> consultation d'un avocat, d'un expert-comptable ou d'un autre
+> professionnel qualifié.**
+
+## À quoi sert ce module ? / What is this module for?
+
+*Cette section s'adresse à un lecteur non technicien. Pour la
+documentation technique, voir les sections suivantes.*
+*This section is written for a non-technical reader. For the technical
+documentation, see the sections below.*
+
+### 🇫🇷 En clair
+
+Ce module surveille pour vous les textes juridiques et réglementaires qui
+vous concernent (lois, décrets, arrêtés, circulaires...), qu'ils viennent
+de Légifrance, d'un flux RSS officiel, ou d'un document que vous importez
+vous-même. Il **collecte** ces textes, les **trie** automatiquement selon
+des règles que vous définissez (mots-clés, source, thème), puis **attend
+votre validation humaine** avant de les considérer comme fiables. Rien
+n'est jamais décidé tout seul par une intelligence artificielle — l'IA
+(optionnelle) peut résumer ou classer un texte, mais c'est toujours une
+personne qui valide, approuve ou rejette.
+
+Une fois validé, chaque texte est **archivé durablement** dans votre
+système Odoo, avec tout son historique (versions précédentes, qui l'a
+validé, quand) — vous n'êtes jamais dépendant d'un service extérieur pour
+retrouver ce que vous avez déjà validé.
+
+### 🇬🇧 In plain terms
+
+This module watches legal and regulatory texts that matter to you (laws,
+decrees, orders, circulars...) on your behalf — whether they come from
+Légifrance, an official RSS feed, or a document you import yourself. It
+**collects** these texts, automatically **sorts** them using rules you
+define (keywords, source, topic), then **waits for a human to validate**
+them before treating them as trustworthy. Nothing is ever decided by an
+AI alone — an optional AI can summarize or classify a text, but a person
+always approves or rejects it.
+
+Once validated, every text is **durably archived** inside your own Odoo
+system, with its full history (previous versions, who validated it, and
+when) — you are never dependent on an external service to find something
+you've already validated.
+
+### Le principe en un coup d'œil / The big picture
+
+```mermaid
+flowchart LR
+    A["📰 Sources<br/>JO, sites officiels,<br/>import manuel / manual import"] --> B["🤖 Collecte automatique<br/>Automatic collection"]
+    B --> C["🔎 Tri intelligent<br/>Smart filtering"]
+    C --> D["👤 Validation humaine<br/>Human review"]:::focal
+    D --> E["🗄️ Archive sécurisée<br/>Secure archive"]
+    D -. optionnel / optional .-> F["✨ Analyse IA<br/>AI analysis"]
+
+    classDef focal fill:#eb6c36,color:#ffffff,stroke:#2d3142,stroke-width:1px;
+```
+
+### Qui fait quoi ? / Who does what?
+
+```mermaid
+flowchart TD
+    U["👀 Utilisateur / User<br/>consulte, importe<br/>reads, imports"] --> R["✅ Réviseur / Reviewer<br/>valide ou rejette<br/>approves or rejects"]:::focal
+    R --> M["⚙️ Manager<br/>configure sources et règles<br/>configures sources & rules"]
+    M --> AD["🔐 Administrateur / Administrator<br/>sécurité, suppression<br/>security, deletion"]
+
+    classDef focal fill:#eb6c36,color:#ffffff,stroke:#2d3142,stroke-width:1px;
+```
+
+### Le parcours d'un document / A document's journey
+
+```mermaid
+flowchart LR
+    N["🆕 Nouveau / New<br/>vient d'être collecté<br/>just collected"] --> Qd["🔍 À qualifier / To review"]
+    Qd --> V["✅ Validé / Approved"]:::focal
+    Qd --> X["❌ Rejeté / Rejected"]
+    V --> Z["🗄️ Archivé / Archived"]
+    X --> Z
+
+    classDef focal fill:#eb6c36,color:#ffffff,stroke:#2d3142,stroke-width:1px;
+```
+
+### Ce que ce module n'est PAS / What this module is NOT
+
+- ❌ Ce n'est **pas** un conseiller juridique — il ne vous dit jamais quoi
+  faire, il vous aide à ne rien manquer.
+  <br>❌ It is **not** a legal advisor — it never tells you what to do,
+  it helps you not miss anything.
+- ❌ Il ne publie ni ne transmet automatiquement un texte sans validation
+  humaine — l'export vers un outil d'IA/RAG est optionnel et toujours
+  soumis à une politique que vous configurez.
+  <br>❌ It never publishes or forwards a text automatically without human
+  validation — export to an AI/RAG tool is optional and always gated by a
+  policy you configure.
+- ❌ Ce n'est pas un service en ligne (SaaS) — tout tourne dans votre
+  propre installation Odoo, vos données restent chez vous.
+  <br>❌ It is not a SaaS — everything runs inside your own Odoo instance,
+  your data stays with you.
 
 ## Status: Phase 6 (security audit & release candidate)
 
