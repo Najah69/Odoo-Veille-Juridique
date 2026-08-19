@@ -116,6 +116,66 @@ safe, idempotent no-op instead of creating clutter.
 Full data model, document lifecycle and ingestion pipeline:
 `docs/architecture.md`. Contributing a change: `CONTRIBUTING.md`.
 
+### Ingestion pipeline
+
+One accent color marks the single durable record everything else revolves
+around — every other node is deliberately unstyled so it reads correctly
+in both GitHub's light and dark themes.
+
+```mermaid
+flowchart LR
+    subgraph Sources["Sources"]
+        RSS["RSS / Atom"]
+        LF["Légifrance / PISTE"]
+        Manual["Manual import"]
+    end
+
+    RSS --> Rules
+    LF --> Rules
+    Manual --> Doc
+
+    Rules["Relevance rules<br/>include / exclude / score / tag"] --> Dedup
+    Dedup["Deduplication<br/>(source, external_id) → canonical_url → content_hash"] --> Doc
+
+    Doc["legal.knowledge.document<br/>+ legal.document.version"]:::focal
+
+    Doc --> Storage["ir.attachment<br/>(or OCA DMS)"]
+    Doc -. approved .-> Job["legal.ai.job"]
+    Job --> Provider["AI / export provider<br/>webhook · ai_brain_http · filesystem"]
+
+    classDef focal fill:#eb6c36,color:#ffffff,stroke:#2d3142,stroke-width:1px;
+```
+
+### Document lifecycle
+
+Mirrors `_ALLOWED_TRANSITIONS` in `models/legal_knowledge_document.py`
+exactly — this diagram and that dict must never drift apart.
+
+```mermaid
+stateDiagram-v2
+    [*] --> new
+    new --> qualified
+    new --> review
+    new --> rejected
+    qualified --> approved
+    qualified --> review
+    qualified --> rejected
+    review --> approved
+    review --> rejected
+    approved --> archived
+    approved --> superseded
+    rejected --> review
+    rejected --> archived
+    superseded --> archived
+    archived --> [*]
+
+    classDef focal fill:#eb6c36,color:#ffffff,stroke:#2d3142,stroke-width:1px
+    class approved focal
+```
+
+<sub>Diagram palette (one accent, restrained default styling) follows the
+principles in [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design).</sub>
+
 ## Security & data
 
 - Manual import, RSS and OCA DMS need no secrets at all. Légifrance/PISTE
