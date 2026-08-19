@@ -219,11 +219,9 @@ undocumented:
   than valuable for a first release candidate.
 - **No lint tooling configured** in this repository (no
   `pyproject.toml`/`flake8`/`ruff` config) — `.github/workflows/tests.yml`
-  (added in the Prompt 8/9 publish-prep pass) now runs the test suite on
-  push/PR, but there is still no automated style/lint check. That
-  workflow is itself unverified against a real GitHub Actions run (this
-  repo has no remote yet at the time it was written) — check its first
-  real run rather than assuming it's correct on faith.
+  (added in the Prompt 8/9 publish-prep pass, confirmed green on its
+  first real run, 2026-08-19) now runs the test suite on push/PR, but
+  there is still no automated style/lint check.
 - **AI provider `base_url` has no domain allowlist** equivalent to RSS's
   `allowed_domains` — see the SSRF section above. `base_url` is
   Administrator-only to set, which bounds but does not close this.

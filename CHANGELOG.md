@@ -11,9 +11,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   `services/deduplication_service.py`, `docs/ai-providers.md`) without it
   ever actually existing.
 - `.github/workflows/tests.yml`: runs the full test suite (official Odoo
-  18 image + throwaway Postgres) on push/PR. Unverified against a real
-  GitHub Actions run — this repo has no remote yet — check its first real
-  run rather than assuming it's correct on faith.
+  18 image + throwaway Postgres) on push/PR. Confirmed green on its first
+  real run (2026-08-19, 126/126 tests, ~1m20s) after the initial GitHub
+  publish.
 - `.github/ISSUE_TEMPLATE/` (bug report, feature request),
   `.github/PULL_REQUEST_TEMPLATE.md`.
 - `SECURITY.md`: points to GitHub private vulnerability reporting and to
