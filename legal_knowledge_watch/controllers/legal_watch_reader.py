@@ -35,14 +35,38 @@ class LegalWatchReaderController(http.Controller):
     @http.route("/veille-juridique", type="http", auth="user", website=True)
     def reader(self, **kw):
         # EN: No sudo() — this page respects the visiting user's own
-        # legal_knowledge_watch group/company access exactly like the
-        # backend would, it is a friendlier view of the same data, not
-        # a bypass of it.
-        # FR : Pas de sudo() — cette page respecte l'accès
-        # groupe/société propre à l'utilisateur qui la consulte,
-        # exactement comme le backend le ferait ; c'est une vue plus
-        # accueillante des mêmes données, pas un contournement.
-        documents = request.env["legal.knowledge.document"].search(
+        # legal_knowledge_watch group access exactly like the backend
+        # would, it is a friendlier view of the same data, not a bypass
+        # of it. It DOES explicitly widen the multi-company context to
+        # every company the user belongs to (not just whichever one
+        # happens to be "active" in their session's company switcher) —
+        # a "revue de presse, toutes sources confondues" page that goes
+        # empty just because the visitor's active company toggle points
+        # elsewhere defeats its own purpose. See docs/security.md for
+        # why every model here has a multi-company ir.rule in the first
+        # place; this only widens which of the user's *own* allowed
+        # companies are considered, it never grants access to a company
+        # the user isn't already a member of.
+        # FR : Pas de sudo() — cette page respecte l'accès groupe propre
+        # à l'utilisateur qui la consulte, exactement comme le backend
+        # le ferait ; c'est une vue plus accueillante des mêmes données,
+        # pas un contournement. Elle élargit en revanche explicitement
+        # le contexte multi-société à toutes les sociétés dont
+        # l'utilisateur est membre (pas seulement celle actuellement
+        # « active » dans le sélecteur de société de sa session) — une
+        # page « revue de presse, toutes sources confondues » qui
+        # s'affiche vide juste parce que le bascule de société active du
+        # visiteur pointe ailleurs manquerait son propre objectif. Voir
+        # docs/security.md pour la raison d'être de la règle ir.rule
+        # multi-société sur chaque modèle ; ceci élargit seulement quelles
+        # sociétés *déjà autorisées* de l'utilisateur sont prises en
+        # compte, ça n'accorde jamais l'accès à une société dont il n'est
+        # pas membre.
+        env = request.env(context=dict(
+            request.env.context,
+            allowed_company_ids=request.env.user.company_ids.ids,
+        ))
+        documents = env["legal.knowledge.document"].search(
             [], order="collected_at desc", limit=DEFAULT_LIMIT,
         )
         rows = [
@@ -56,7 +80,7 @@ class LegalWatchReaderController(http.Controller):
         # d'action est propre à chaque base (ex. 944 sur
         # chapeau_blanc_group n'est pas portable vers une autre
         # installation de ce module).
-        settings_action = request.env.ref(
+        settings_action = env.ref(
             "legal_knowledge_watch.action_legal_watch", raise_if_not_found=False,
         )
         return request.render(
