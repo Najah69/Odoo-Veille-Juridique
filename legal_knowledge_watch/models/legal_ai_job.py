@@ -52,6 +52,20 @@ class LegalAiJob(models.Model):
         comodel_name="legal.knowledge.document", string="Document",
         required=True, ondelete="cascade", index=True,
     )
+    company_id = fields.Many2one(
+        comodel_name="res.company", string="Company",
+        related="document_id.company_id", readonly=True,
+        help="Follows the document's company — used by the multi-company "
+             "record rule so a job (and its provider/error details) is "
+             "never visible outside the document's own company. "
+             "Deliberately NOT store=True: this model's own reconciliation "
+             "(_reconcile_stuck_jobs) detects a stuck job by write_date, "
+             "and a stored related field can get lazily flushed by the "
+             "ORM ahead of an unrelated search — which silently bumps "
+             "write_date and defeats that check. A non-stored related "
+             "field is still fully usable in ir.rule/search domains "
+             "(Odoo joins through it), it just isn't its own DB column.",
+    )
     provider_id = fields.Many2one(
         comodel_name="legal.ai.provider", string="Provider",
         required=True, ondelete="restrict",

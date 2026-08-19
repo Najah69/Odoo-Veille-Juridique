@@ -51,11 +51,13 @@ CONSULT_RESPONSE_FIXTURE = {
 
 
 class _FakeResponse:
-    def __init__(self, status_code=200, json_data=None, text=""):
+    def __init__(self, status_code=200, json_data=None, text="", headers=None):
         self.status_code = status_code
         self._json_data = json_data if json_data is not None else {}
         self.text = text or jsonlib.dumps(self._json_data)
         self.ok = 200 <= status_code < 300
+        self.headers = headers or {}
+        self.content = self.text.encode("utf-8")
 
     def json(self):
         return self._json_data
@@ -99,6 +101,18 @@ class TestPisteOAuthClient(LegalWatchTransactionCase):
             client = PisteOAuthClient("id", "secret", "sandbox")
             with self.assertRaises(PisteOAuthTokenError):
                 client.get_token()
+
+    def test_get_token_redirect_is_not_followed(self):
+        # A followed redirect would send client_secret to whatever host it
+        # points to — must be a hard failure, and allow_redirects=False
+        # must actually be passed to requests.post.
+        redirect_response = _FakeResponse(302, headers={"Location": "http://evil.example/"})
+        with patch(_TOKEN_PATCH, return_value=redirect_response) as mock_post:
+            client = PisteOAuthClient("id", "secret", "sandbox")
+            with self.assertRaises(PisteOAuthTokenError):
+                client.get_token()
+        _, kwargs = mock_post.call_args
+        self.assertEqual(kwargs["allow_redirects"], False)
 
 
 class TestLegifranceConnectorValidation(LegalWatchTransactionCase):
@@ -160,7 +174,7 @@ class TestLegifranceConnectorFetch(LegalWatchTransactionCase):
     def test_fetch_returns_candidates_with_full_text_and_document_type(self):
         watch = self._make_watch()
 
-        def fake_post(url, headers=None, json=None, data=None, timeout=None):
+        def fake_post(url, headers=None, json=None, data=None, timeout=None, allow_redirects=None):
             if url == _TOKEN_URL:
                 return _token_response()
             if url.endswith("/search"):
@@ -186,7 +200,7 @@ class TestLegifranceConnectorFetch(LegalWatchTransactionCase):
     def test_fetch_falls_back_to_title_when_consult_fails(self):
         watch = self._make_watch()
 
-        def fake_post(url, headers=None, json=None, data=None, timeout=None):
+        def fake_post(url, headers=None, json=None, data=None, timeout=None, allow_redirects=None):
             if url == _TOKEN_URL:
                 return _token_response()
             if url.endswith("/search"):
@@ -205,10 +219,41 @@ class TestLegifranceConnectorFetch(LegalWatchTransactionCase):
             self.assertEqual(item.plain_text, item.title)
             self.assertIsNotNone(item.source_metadata["consult_error"])
 
+    def test_fetch_search_redirect_raises(self):
+        watch = self._make_watch()
+
+        def fake_post(url, headers=None, json=None, data=None, timeout=None, allow_redirects=None):
+            if url == _TOKEN_URL:
+                return _token_response()
+            if url.endswith("/search"):
+                return _FakeResponse(302, headers={"Location": "http://evil.example/"})
+            raise AssertionError(f"Unexpected URL {url}")
+
+        with self._env(), patch(_TOKEN_PATCH, side_effect=fake_post), \
+             patch(_API_PATCH, side_effect=fake_post):
+            with self.assertRaises(ConnectorFetchError):
+                LegifranceConnector(watch, logger=None).fetch(cursor=None, limit=10)
+
+    def test_fetch_search_over_size_limit_raises(self):
+        watch = self._make_watch()
+        big_fixture = {"results": [], "totalResultNumber": 0, "padding": "x" * 6_000_000}
+
+        def fake_post(url, headers=None, json=None, data=None, timeout=None, allow_redirects=None):
+            if url == _TOKEN_URL:
+                return _token_response()
+            if url.endswith("/search"):
+                return _FakeResponse(200, big_fixture)
+            raise AssertionError(f"Unexpected URL {url}")
+
+        with self._env(), patch(_TOKEN_PATCH, side_effect=fake_post), \
+             patch(_API_PATCH, side_effect=fake_post):
+            with self.assertRaises(ConnectorFetchError):
+                LegifranceConnector(watch, logger=None).fetch(cursor=None, limit=10)
+
     def test_fetch_search_401_raises_connector_fetch_error(self):
         watch = self._make_watch()
 
-        def fake_post(url, headers=None, json=None, data=None, timeout=None):
+        def fake_post(url, headers=None, json=None, data=None, timeout=None, allow_redirects=None):
             if url == _TOKEN_URL:
                 return _token_response()
             if url.endswith("/search"):
@@ -224,7 +269,7 @@ class TestLegifranceConnectorFetch(LegalWatchTransactionCase):
         watch = self._make_watch()
         call_count = {"search": 0}
 
-        def fake_post(url, headers=None, json=None, data=None, timeout=None):
+        def fake_post(url, headers=None, json=None, data=None, timeout=None, allow_redirects=None):
             if url == _TOKEN_URL:
                 return _token_response()
             if url.endswith("/search"):
@@ -247,7 +292,7 @@ class TestLegifranceConnectorFetch(LegalWatchTransactionCase):
     def test_fetch_500_exhausts_retries_and_raises(self):
         watch = self._make_watch()
 
-        def fake_post(url, headers=None, json=None, data=None, timeout=None):
+        def fake_post(url, headers=None, json=None, data=None, timeout=None, allow_redirects=None):
             if url == _TOKEN_URL:
                 return _token_response()
             if url.endswith("/search"):
@@ -263,7 +308,7 @@ class TestLegifranceConnectorFetch(LegalWatchTransactionCase):
     def test_fetch_respects_max_items_per_run(self):
         watch = self._make_watch(max_items_per_run=1)
 
-        def fake_post(url, headers=None, json=None, data=None, timeout=None):
+        def fake_post(url, headers=None, json=None, data=None, timeout=None, allow_redirects=None):
             if url == _TOKEN_URL:
                 return _token_response()
             if url.endswith("/search"):
@@ -282,7 +327,7 @@ class TestLegifranceConnectorFetch(LegalWatchTransactionCase):
         watch = self._make_watch()
         captured_payloads = []
 
-        def fake_post(url, headers=None, json=None, data=None, timeout=None):
+        def fake_post(url, headers=None, json=None, data=None, timeout=None, allow_redirects=None):
             if url == _TOKEN_URL:
                 return _token_response()
             if url.endswith("/search"):

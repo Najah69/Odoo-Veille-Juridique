@@ -469,7 +469,12 @@ class LegalKnowledgeDocument(models.Model):
                 document, candidate.get("attachment_vals"),
                 candidate.get("storage_mode", "auto"),
             )
-            version = self.env["legal.document.version"].create({
+            # sudo(): legal.document.version create/write is restricted to
+            # Reviewer+ (see ir.model.access.csv, Phase 7 security audit) so
+            # a plain User can't forge a version directly via the ORM/RPC —
+            # this centralized method is the only sanctioned creation path,
+            # reached from the manual-import wizard and every connector.
+            version = self.env["legal.document.version"].sudo().create({
                 "document_id": document.id,
                 "sequence": 1,
                 "content_hash": content_hash,
@@ -483,7 +488,8 @@ class LegalKnowledgeDocument(models.Model):
 
     def _create_new_version(self, document, candidate, plain_text, content_hash):
         with self.env.cr.savepoint():
-            document.current_version_id.write({"is_current": False})
+            # sudo(): see the matching note in create_or_update_from_candidate().
+            document.current_version_id.sudo().write({"is_current": False})
             next_sequence = (
                 max(document.version_ids.mapped("sequence")) + 1
                 if document.version_ids else 1
@@ -492,7 +498,7 @@ class LegalKnowledgeDocument(models.Model):
                 document, candidate.get("attachment_vals"),
                 candidate.get("storage_mode", "auto"),
             )
-            version = self.env["legal.document.version"].create({
+            version = self.env["legal.document.version"].sudo().create({
                 "document_id": document.id,
                 "sequence": next_sequence,
                 "content_hash": content_hash,
@@ -504,7 +510,12 @@ class LegalKnowledgeDocument(models.Model):
                 "is_current": True,
                 **storage_vals,
             })
-            document.write({
+            # sudo(): User/Reviewer only have perm_write=0 on
+            # legal.knowledge.document (see ir.model.access.csv) — these
+            # writes only ever touch fields this method itself computed
+            # (content_hash/relevance_score) or a derived state flag, never
+            # user-supplied values, so sudo() here doesn't reopen a gap.
+            document.sudo().write({
                 "content_hash": content_hash,
                 "last_checked_at": fields.Datetime.now(),
                 "relevance_score": candidate.get("relevance_score", document.relevance_score),
@@ -514,7 +525,7 @@ class LegalKnowledgeDocument(models.Model):
                 # current content — flag it rather than silently leaving
                 # a stale export_state='exported'. Reconciliation
                 # (_cron_reconcile_exports) re-queues a fresh export.
-                document.export_state = "stale"
+                document.sudo().export_state = "stale"
         document.message_post(
             body=self.env._(
                 "New version collected (previous version kept in history)."

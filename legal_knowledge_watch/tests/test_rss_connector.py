@@ -176,3 +176,31 @@ class TestRSSConnectorFetch(unittest.TestCase):
         config = dict(self.config, max_response_bytes=100)
         with self.assertRaises(ConnectorFetchError):
             _connector(config).fetch(cursor=None, limit=10)
+
+    @patch("odoo.addons.legal_knowledge_watch.services.rss_connector.requests.get")
+    def test_feed_url_pointing_at_loopback_ip_is_rejected(self, mock_get):
+        # No network call must happen at all: assert_public_host() rejects
+        # the literal loopback IP before requests.get is ever called.
+        config = {"feed_url": "http://127.0.0.1/feed.rss"}
+        with self.assertRaises(ConnectorFetchError):
+            _connector(config).fetch(cursor=None, limit=10)
+        mock_get.assert_not_called()
+
+    @patch("odoo.addons.legal_knowledge_watch.services.rss_connector.requests.get")
+    def test_feed_url_pointing_at_link_local_metadata_ip_is_rejected(self, mock_get):
+        config = {"feed_url": "http://169.254.169.254/feed.rss"}
+        with self.assertRaises(ConnectorFetchError):
+            _connector(config).fetch(cursor=None, limit=10)
+        mock_get.assert_not_called()
+
+    @patch("odoo.addons.legal_knowledge_watch.services.rss_connector.requests.get")
+    def test_redirect_is_not_followed(self, mock_get):
+        mock_get.return_value = _FakeResponse(
+            302, headers={"Location": "http://127.0.0.1/internal"},
+        )
+        with self.assertRaises(ConnectorFetchError):
+            _connector(self.config).fetch(cursor=None, limit=10)
+        # A single attempt: a redirect is a hard failure, never retried.
+        self.assertEqual(mock_get.call_count, 1)
+        _, kwargs = mock_get.call_args
+        self.assertEqual(kwargs["allow_redirects"], False)

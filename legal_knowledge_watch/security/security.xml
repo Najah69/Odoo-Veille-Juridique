@@ -53,5 +53,40 @@
             <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
         </record>
 
+        <!-- Added in the Phase 7 security audit: these five models all
+             carry (directly or via a related field) a company_id, but had
+             no rule enforcing it — a real cross-company data exposure gap
+             (legal.document.enrichment.output_json in particular can hold
+             excerpts of another company's documents). See docs/security.md. -->
+        <record id="legal_ai_job_company_rule" model="ir.rule">
+            <field name="name">legal.ai.job: multi-company</field>
+            <field name="model_id" ref="model_legal_ai_job"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="legal_document_enrichment_company_rule" model="ir.rule">
+            <field name="name">legal.document.enrichment: multi-company</field>
+            <field name="model_id" ref="model_legal_document_enrichment"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="legal_dms_directory_route_company_rule" model="ir.rule">
+            <field name="name">legal.dms.directory.route: multi-company</field>
+            <field name="model_id" ref="model_legal_dms_directory_route"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="legal_export_policy_company_rule" model="ir.rule">
+            <field name="name">legal.export.policy: multi-company</field>
+            <field name="model_id" ref="model_legal_export_policy"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="legal_retention_policy_company_rule" model="ir.rule">
+            <field name="name">legal.retention.policy: multi-company</field>
+            <field name="model_id" ref="model_legal_retention_policy"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
     </data>
 </odoo>

@@ -18,6 +18,7 @@ from .base_connector import (
     FetchResult,
 )
 from .connector_registry import register_connector
+from .url_safety import UnsafeUrlError, assert_public_host
 
 try:
     import feedparser
@@ -90,14 +91,33 @@ class RSSConnector(BaseConnector):
         return config
 
     def _get_with_retries(self, url, headers, timeout, max_bytes):
+        try:
+            assert_public_host(url)
+        except UnsafeUrlError as exc:
+            # Config error, not a transient fetch failure: never retried.
+            raise ConnectorFetchError(str(exc)) from exc
+
         last_exc = None
         for attempt in range(1, MAX_RETRIES + 1):
             try:
                 response = requests.get(
                     url, headers=headers, timeout=timeout, stream=True,
+                    allow_redirects=False,
                 )
                 if response.status_code == 304:
                     return response
+                if 300 <= response.status_code < 400:
+                    # Never silently follow a redirect: it would bypass
+                    # both the domain allowlist and the SSRF host check
+                    # above, which only ever validate the URL we were
+                    # asked to fetch — not wherever a redirect points.
+                    response.close()
+                    raise ConnectorFetchError(
+                        f"HTTP {response.status_code} redirect from {url} "
+                        f"was not followed (redirects are disabled for "
+                        f"safety). Point the configuration at the final "
+                        f"URL directly."
+                    )
                 if response.status_code in (429,) or response.status_code >= 500:
                     response.close()
                     last_exc = ConnectorFetchError(

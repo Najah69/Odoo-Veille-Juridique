@@ -57,6 +57,7 @@ SANDBOX_API_URL = "https://sandbox-api.piste.gouv.fr/dila/legifrance/lf-engine-a
 DEFAULT_TIMEOUT_SECONDS = 20
 DEFAULT_MAX_ITEMS_PER_RUN = 50
 DEFAULT_LOOKBACK_DAYS_FIRST_RUN = 7
+DEFAULT_MAX_RESPONSE_BYTES = 5_000_000
 MAX_RETRIES = 3
 RETRY_BACKOFF_SECONDS = 1
 PISTE_MAX_PAGE_SIZE = 100  # per the generated model's own field description
@@ -215,7 +216,10 @@ class LegifranceConnector(BaseConnector):
         }
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                response = requests.post(url, headers=headers, json=payload, timeout=timeout)
+                response = requests.post(
+                    url, headers=headers, json=payload, timeout=timeout,
+                    allow_redirects=False,
+                )
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
                 last_exc = ConnectorFetchError(f"Network error calling {url}: {exc}")
                 if attempt < MAX_RETRIES:
@@ -223,6 +227,15 @@ class LegifranceConnector(BaseConnector):
                     continue
                 raise last_exc from exc
 
+            if 300 <= response.status_code < 400:
+                # PRODUCTION_API_URL/SANDBOX_API_URL are hardcoded constants
+                # (no admin-configurable SSRF surface here), but a redirect
+                # still must never be followed silently — it would send the
+                # PISTE bearer token to an arbitrary host.
+                raise ConnectorFetchError(
+                    f"HTTP {response.status_code} redirect from {url} was "
+                    f"not followed (redirects are disabled for safety)."
+                )
             if response.status_code in (401, 403):
                 raise ConnectorFetchError(
                     f"PISTE rejected the request (HTTP {response.status_code}) "
@@ -239,6 +252,16 @@ class LegifranceConnector(BaseConnector):
             if response.status_code >= 400:
                 raise ConnectorFetchError(
                     f"HTTP {response.status_code} calling {url}: {response.text[:500]}"
+                )
+            content_length = response.headers.get("Content-Length")
+            if content_length is not None and content_length.isdigit() and int(content_length) > DEFAULT_MAX_RESPONSE_BYTES:
+                raise ConnectorFetchError(
+                    f"Response from {url} declares {content_length} bytes, "
+                    f"exceeding the {DEFAULT_MAX_RESPONSE_BYTES} bytes limit."
+                )
+            if len(response.content) > DEFAULT_MAX_RESPONSE_BYTES:
+                raise ConnectorFetchError(
+                    f"Response from {url} exceeds the {DEFAULT_MAX_RESPONSE_BYTES} bytes limit."
                 )
             return response
         raise last_exc or ConnectorFetchError(f"Failed to call {url}")

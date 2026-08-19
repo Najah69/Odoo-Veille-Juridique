@@ -14,6 +14,19 @@ class LegalDocumentEnrichment(models.Model):
         comodel_name="legal.knowledge.document", string="Document",
         required=True, ondelete="cascade", index=True,
     )
+    company_id = fields.Many2one(
+        comodel_name="res.company", string="Company",
+        related="document_id.company_id", readonly=True,
+        help="Follows the document's company — used by the multi-company "
+             "record rule. output_json can contain excerpts/summaries of "
+             "the source document, so this must never be visible outside "
+             "the document's own company. Deliberately NOT store=True — "
+             "see the matching note on legal.ai.job.company_id (a stored "
+             "related field can be lazily flushed by the ORM and disturb "
+             "write_date-based staleness checks elsewhere in this module; "
+             "kept unstored uniformly rather than only where a check "
+             "happens to exist today).",
+    )
     kind = fields.Selection(
         selection=[
             ("rule_classification", "Rule Classification"),

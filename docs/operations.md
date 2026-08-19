@@ -108,3 +108,42 @@ Configuration → **Apply Retention**, uncheck **Dry Run**, click **Run**.
 The scheduled cron itself is disabled by default and, even if enabled,
 only ever runs with `dry_run=True` — a real run is always a deliberate,
 one-off action, never something a forgotten cron toggle can trigger.
+
+## Release checklist
+
+Before tagging a release:
+
+1. **Tests**: `odoo --test-enable --stop-after-init -i legal_knowledge_watch
+   -d <throwaway_test_db>` passes fully, on a real Odoo 18 instance (not
+   just read-through). The full suite must stay network-free — see
+   `CONTRIBUTING.md`.
+2. **Secrets scan**: `git log -p` across the full history plus a
+   working-tree grep for credential-shaped strings (API keys, bearer
+   tokens, `client_secret=`, private-key headers). Any hit blocks the
+   release.
+3. **`docs/security.md` is current**: any access-control, secrets, or
+   outbound-network change since the last release is reflected there, not
+   just in the code.
+4. **`CHANGELOG.md`** has an entry for the release, and
+   `__manifest__.py`'s `version` matches it.
+5. **Manifest sanity**: `external_dependencies` still lists every non-core
+   Python package actually imported at module load time (`requests`,
+   `feedparser`, `bs4`); OCA DMS is still absent from `depends` (it must
+   stay optional — see `docs/oca-dms-integration.md`).
+6. **Deploy**: copy `legal_knowledge_watch/` to the target addons path,
+   `pip install` the packages from `external_dependencies` (plus `PyPDF2`
+   if PDF text extraction is wanted), update the apps list, install/
+   upgrade the module. No database migration script exists yet — this is
+   a fresh-install-or-upgrade-in-place module with no destructive schema
+   changes across phases so far.
+7. **Rollback**: uninstalling the module removes its own models/data but
+   never touches `ir.attachment`/`dms.file` records it created (Odoo does
+   not cascade-delete attachments on module uninstall) — source content
+   already collected is not lost even if the module itself is removed. To
+   roll back to a previous *version* of the module instead of uninstalling
+   it, deploy the previous version's code and upgrade in place; no phase so
+   far has shipped a backward-incompatible model change that would block
+   this.
+8. **Go/no-go**: all of the above pass, and every P0/P1 finding in
+   `docs/security.md` for the version being released is fixed (P2 findings
+   may ship as documented, deliberate residual risk).

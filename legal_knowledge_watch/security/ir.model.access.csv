@@ -14,7 +14,7 @@ access_legal_watch_rule_admin,legal.watch.rule admin,model_legal_watch_rule,grou
 access_legal_knowledge_document_user,legal.knowledge.document user,model_legal_knowledge_document,group_legal_watch_user,1,0,1,0
 access_legal_knowledge_document_reviewer,legal.knowledge.document reviewer,model_legal_knowledge_document,group_legal_watch_reviewer,1,1,1,0
 access_legal_knowledge_document_admin,legal.knowledge.document admin,model_legal_knowledge_document,group_legal_watch_administrator,1,1,1,1
-access_legal_document_version_user,legal.document.version user,model_legal_document_version,group_legal_watch_user,1,1,1,0
+access_legal_document_version_user,legal.document.version user,model_legal_document_version,group_legal_watch_user,1,0,0,0
 access_legal_document_version_admin,legal.document.version admin,model_legal_document_version,group_legal_watch_administrator,1,1,1,1
 access_legal_ingestion_run_user,legal.ingestion.run user,model_legal_ingestion_run,group_legal_watch_user,1,1,1,0
 access_legal_ingestion_run_admin,legal.ingestion.run admin,model_legal_ingestion_run,group_legal_watch_administrator,1,1,1,1

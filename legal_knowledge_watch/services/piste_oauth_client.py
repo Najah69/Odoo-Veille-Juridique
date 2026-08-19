@@ -49,12 +49,23 @@ class PisteOAuthClient:
             "scope": "openid",
         }
         try:
-            response = requests.post(self._token_url, data=data, timeout=self._timeout)
+            # allow_redirects=False: a followed redirect would send
+            # client_secret to whatever host it points to.
+            response = requests.post(
+                self._token_url, data=data, timeout=self._timeout,
+                allow_redirects=False,
+            )
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
             raise PisteOAuthTokenError(
                 f"Network error obtaining a PISTE token: {exc}"
             ) from exc
 
+        if 300 <= response.status_code < 400:
+            raise PisteOAuthTokenError(
+                f"HTTP {response.status_code} redirect from the PISTE token "
+                f"endpoint was not followed (redirects are disabled for "
+                f"safety)."
+            )
         if response.status_code in (401, 403):
             raise PisteOAuthTokenError(
                 f"PISTE rejected the configured client_id/client_secret "

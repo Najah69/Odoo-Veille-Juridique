@@ -8,7 +8,7 @@ a locally-owned document history.
 > tax or accounting advice, and it does not replace consultation with a
 > qualified lawyer, accountant or other professional.**
 
-## Status: Phase 5 (reconciliation & retention)
+## Status: Phase 6 (security audit & release candidate)
 
 - Manual import (file upload or pasted text).
 - **RSS/Atom connector**: conditional GET (ETag/Last-Modified), bounded
@@ -47,6 +47,12 @@ a locally-owned document history.
 - Document review workflow (`new → qualified → review → approved/rejected →
   archived/superseded`).
 - Multi-company record rules and role-based access control.
+- **Security-hardening pass**: closed a cross-company data-exposure gap on
+  `legal.ai.job`/`legal.document.enrichment`/3 other config models,
+  restricted `legal.document.version` writes to the sanctioned creation
+  path only, and added SSRF/redirect/response-size protection to every
+  outbound call to an admin-configured URL. See `docs/security.md` for the
+  full audit, including what remains a documented residual risk.
 
 See `CHANGELOG.md` for exactly what is implemented today.
 
@@ -113,19 +119,20 @@ safe, idempotent no-op instead of creating clutter.
   committed, never displayed in the UI, never logged. See
   `docs/legifrance-piste.md` and `docs/ai-providers.md`.
 - Access is controlled by four groups (`User`, `Reviewer`, `Manager`,
-  `Administrator`) and company-scoped record rules.
+  `Administrator`), company-scoped record rules on every model that
+  carries a `company_id`, and a restricted write path on
+  `legal.document.version` (see `docs/security.md`).
 - Document deletion (`unlink`) is restricted to `Administrator`; use
   **Archive** for normal end-of-life instead, so the audit trail (chatter,
   version history) is preserved.
+- Every outbound call to an admin-configured URL (RSS `feed_url`, AI
+  provider `base_url`) is checked against literal private/loopback/
+  link-local addresses, never follows a redirect, and is capped at 5 MB.
+  See `docs/security.md` for exactly what this does and does not cover
+  (hostname-based SSRF via DNS is a documented residual gap, not silently
+  ignored).
 
-## Known limitation to be hardened later
-
-Users with the base `User` role can create `legal.document.version` records
-(required so the manual-import wizard works for them) and technically retain
-ORM write access to that model, even though the standard UI never lets them
-edit a version's content directly. This is an accepted Phase 0 trade-off,
-flagged here for the dedicated security-audit phase rather than silently
-left undocumented.
+Full audit, threat model and residual risks: `docs/security.md`.
 
 ## Running the tests
 

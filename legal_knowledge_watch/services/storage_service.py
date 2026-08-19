@@ -47,7 +47,15 @@ class AttachmentStorageBackend(LegalStorageBackend):
     def store(self, document, attachment_vals):
         if not attachment_vals:
             return {"storage_backend": "attachment", "attachment_id": False}
-        attachment = self.env["ir.attachment"].create({
+        # sudo(): ir.attachment.create() requires *write* access on the
+        # target record (legal.knowledge.document), which the User/
+        # Reviewer groups deliberately don't have — see
+        # access_legal_knowledge_document_user in ir.model.access.csv.
+        # Reached only through create_or_update_from_candidate()/
+        # _create_new_version(), the same sanctioned path already sudo()d
+        # for legal.document.version (see legal_knowledge_document.py) —
+        # matches the DmsStorageBackend.store() pattern in storage_dms.py.
+        attachment = self.env["ir.attachment"].sudo().create({
             **attachment_vals,
             "res_model": "legal.knowledge.document",
             "res_id": document.id,

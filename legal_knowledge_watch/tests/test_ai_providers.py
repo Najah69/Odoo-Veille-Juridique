@@ -19,10 +19,12 @@ _SLEEP = "odoo.addons.legal_knowledge_watch.services.http_retry.time.sleep"
 
 
 class _FakeResponse:
-    def __init__(self, status_code=200, json_data=None, text=""):
+    def __init__(self, status_code=200, json_data=None, text="", headers=None):
         self.status_code = status_code
         self._json_data = json_data
         self.text = text
+        self.headers = headers or {}
+        self.content = text.encode("utf-8") if text else b""
 
     def json(self):
         if self._json_data is None:
@@ -202,3 +204,37 @@ class TestAiBrainHttpProvider(LegalWatchTransactionCase):
         provider = self._make_provider(auth_mode="none", secret_parameter_key=False)
         with patch(_HTTP_GET, return_value=_FakeResponse(200, {"status": "ok"})):
             AiBrainHttpProvider(provider).healthcheck()  # must not raise
+
+    @patch(_HTTP_GET)
+    def test_base_url_pointing_at_loopback_ip_is_rejected(self, mock_get):
+        # No network call must happen: assert_public_host() rejects the
+        # literal loopback IP before requests.get is ever called.
+        provider = self._make_provider(base_url="http://127.0.0.1:9999")
+        with self._with_token():
+            with self.assertRaises(AIProviderError):
+                AiBrainHttpProvider(provider).healthcheck()
+        mock_get.assert_not_called()
+
+    @patch(_HTTP_GET)
+    def test_redirect_is_not_followed(self, mock_get):
+        mock_get.return_value = _FakeResponse(
+            302, headers={"Location": "http://127.0.0.1/internal"},
+        )
+        provider = self._make_provider()
+        with self._with_token():
+            with self.assertRaises(AIProviderError):
+                AiBrainHttpProvider(provider).healthcheck()
+        # A redirect is a hard failure, never retried.
+        self.assertEqual(mock_get.call_count, 1)
+        _, kwargs = mock_get.call_args
+        self.assertEqual(kwargs["allow_redirects"], False)
+
+    @patch(_HTTP_GET)
+    def test_oversized_response_is_rejected(self, mock_get):
+        mock_get.return_value = _FakeResponse(
+            200, headers={"Content-Length": "50000000"},
+        )
+        provider = self._make_provider()
+        with self._with_token():
+            with self.assertRaises(AIProviderError):
+                AiBrainHttpProvider(provider).healthcheck()

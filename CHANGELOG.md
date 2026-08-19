@@ -2,6 +2,53 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [18.0.7.0.0] - Unreleased — Phase 6 (security audit / release candidate)
+
+### Security
+- **P0 — cross-company data exposure**: `legal.ai.job` and
+  `legal.document.enrichment` carried a `company_id`-derivable link to
+  their document but had no `ir.rule` enforcing it; `output_json` on the
+  latter can hold a summary/excerpt of another company's document. Fixed:
+  added `company_id` (related, deliberately **not** stored — see below)
+  to both models plus `ir.rule` records for these two and three
+  previously-uncovered config models (`legal.dms.directory.route`,
+  `legal.export.policy`, `legal.retention.policy`). Regression tests in
+  `test_multicompany.py`.
+- **Fixed while testing the above**: a first attempt stored the new
+  `company_id` field on `legal.ai.job`. A stored related field can be
+  lazily flushed by the ORM ahead of an unrelated `search()` — which
+  silently bumps `write_date` — and `_reconcile_stuck_jobs()` relies on
+  `write_date` to detect a job stuck in `running`. Caught by
+  `test_stuck_running_ai_job_is_reset_to_retry` failing in the release
+  candidate's own test pass; fixed by leaving `company_id` unstored on
+  both `legal.ai.job` and `legal.document.enrichment` (still fully usable
+  in `ir.rule`/search domains — Odoo joins through a non-stored related
+  field, it just isn't its own DB column).
+- **P0 — direct version forgery**: `legal.document.version` granted
+  `User`/`Reviewer` `perm_write=1, perm_create=1` so the manual-import
+  wizard would work, which also let a plain-`User` account forge a version
+  directly over ORM/RPC (arbitrary content/hash/`is_current`, bypassing
+  dedup and history rules). Fixed: ACL tightened to read-only for those
+  groups; `create_or_update_from_candidate()`/`_create_new_version()`
+  (the single sanctioned creation path) now `.sudo()` only the
+  `legal.document.version` create/write calls. Regression test in
+  `test_manual_import_wizard.py`.
+- **P1 — SSRF / redirects / response size** on every admin-configured
+  outbound URL (RSS `feed_url`/linked-content fetch, both AI providers'
+  `base_url`): new `services/url_safety.py` rejects a literal private/
+  loopback/link-local/reserved IP host before any request is made
+  (deliberately IP-literal-only, not DNS-resolution-based — see the
+  module docstring and `docs/security.md` for why). Every outbound call
+  (`rss_connector.py`, `http_retry.py`, `legifrance_connector.py`,
+  `piste_oauth_client.py`) now sets `allow_redirects=False` and treats any
+  `3xx` as a hard failure, and `legifrance_connector.py`/`http_retry.py`
+  gained the same 5 MB response cap RSS already had. Regression tests
+  across `test_rss_connector.py`, `test_ai_providers.py`,
+  `test_legifrance_connector.py`.
+- Full audit, what's fixed, and what's a documented residual risk (P2,
+  deferred): `docs/security.md` (new). `CONTRIBUTING.md` (new): setup,
+  test conventions (must run fully offline), code conventions, versioning.
+
 ## [18.0.6.0.0] - Unreleased — Phase 5
 
 ### Added

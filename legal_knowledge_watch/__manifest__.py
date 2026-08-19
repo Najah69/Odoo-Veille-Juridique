@@ -31,15 +31,25 @@ minimal generic webhook provider. AI never overrides human decisions:
 classification results only ever set a "needs review" flag, and export to
 any provider only ever happens for approved, current, non-empty,
 primary/high-trust documents — enforced by policy, not by convention.
-Phase 5 (this version): configurable export policies, reconciliation
-(detects and repairs drift between local state and any export index —
-never by deleting local history), retention (archive, then — well after
-an explicit grace period — purge only non-current version binaries; the
-current version and every metadata row are always kept), and a
-network-free filesystem/JSONL export provider. Odoo remains the durable
-registry; any export index is a reconstructible projection of it.
+Phase 5: configurable export policies, reconciliation (detects and repairs
+drift between local state and any export index — never by deleting local
+history), retention (archive, then — well after an explicit grace period —
+purge only non-current version binaries; the current version and every
+metadata row are always kept), and a network-free filesystem/JSONL export
+provider. Odoo remains the durable registry; any export index is a
+reconstructible projection of it.
+Phase 6 (this version): security audit and release-candidate hardening.
+Closed a cross-company data-exposure gap on 5 models (missing ir.rule
+despite carrying company_id), restricted legal.document.version writes to
+the sanctioned creation path only (no more direct-ORM forgery by a plain
+User), and added SSRF/redirect/response-size protection to every outbound
+call to an admin-configured URL (RSS feed_url, AI provider base_url) plus
+redirect protection on the Légifrance/PISTE connector and OAuth token
+call. See docs/security.md for the full audit, including what remains a
+documented residual risk (hostname-based SSRF via DNS is out of scope —
+resolving DNS here would break this project's offline test suite).
     """,
-    "version": "18.0.6.0.0",
+    "version": "18.0.7.0.0",
     "category": "Tools",
     "author": "Chapeau Blanc Group, Community Contributors",
     "website": "https://github.com/Najah69/odoo-legal-knowledge-watch",
