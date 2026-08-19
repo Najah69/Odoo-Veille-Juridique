@@ -48,16 +48,24 @@ redirect protection on the Légifrance/PISTE connector and OAuth token
 call. See docs/security.md for the full audit, including what remains a
 documented residual risk (hostname-based SSRF via DNS is out of scope —
 resolving DNS here would break this project's offline test suite).
-Phase 8: OpenFisca connector (this version) — watches specific
-legislative parameters (e.g. SMIC, plafond de la Sécurité sociale) for a
-new dated value, distinct from the document-feed model RSS/Légifrance
-use. See docs/openfisca.md for exactly what was verified against the
-real, public api.fr.openfisca.org API (no account needed) and
-cross-checked against the open-source openfisca-france parameter source
-files. Scale/bareme parameters (a structurally different response shape)
-are explicitly out of scope for this phase.
+Phase 8: OpenFisca connector — watches specific legislative parameters
+(e.g. SMIC, plafond de la Sécurité sociale) for a new dated value,
+distinct from the document-feed model RSS/Légifrance use. See
+docs/openfisca.md for exactly what was verified against the real, public
+api.fr.openfisca.org API (no account needed) and cross-checked against
+the open-source openfisca-france parameter source files. Scale/bareme
+parameters (a structurally different response shape) are explicitly out
+of scope for this phase.
+Phase 9 (this version): Open Lefebvre Dalloz connector — watches the
+free legal-news portal's /actualites listing. No documented public
+API/RSS exists for this site (checked live); the connector instead
+parses the __NEXT_DATA__ JSON every Next.js page embeds in its raw
+server-rendered HTML — real structured data, but an internal
+implementation detail rather than a stable public contract, unlike
+Légifrance/OpenFisca. See docs/open-lefebvre-dalloz.md for the full
+grounding and residual-risk disclosure.
     """,
-    "version": "18.0.8.0.0",
+    "version": "18.0.9.0.0",
     "category": "Tools",
     "author": "Chapeau Blanc Group, Community Contributors",
     "website": "https://github.com/Najah69/Odoo-Veille-Juridique",

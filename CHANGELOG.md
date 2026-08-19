@@ -2,6 +2,36 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [18.0.9.0.0] - Unreleased — Phase 9 (Open Lefebvre Dalloz connector)
+
+### Added
+- `services/open_lefebvre_dalloz_connector.py`
+  (`connector_code = "open_lefebvre_dalloz"`): watches
+  `open.lefebvre-dalloz.fr/actualites` (the free Droit social / Droit des
+  affaires legal-news portal) for new articles. No documented public
+  API or RSS/Atom feed exists for this site (checked live: homepage +
+  `/actualites` HTML, `robots.txt`) — instead parses the
+  `__NEXT_DATA__` JSON every Next.js page embeds directly in its raw
+  server-rendered HTML (confirmed present via a plain HTTP GET, before
+  any JavaScript runs): `props.pageProps.page.actualites`, a real list of
+  `id`/`title`/`href`/`date`/`summary`/`matter`/`topicTitle`. See
+  `docs/open-lefebvre-dalloz.md` for the full grounding, including the
+  honest comparison to Légifrance/OpenFisca (a documented contract vs. an
+  internal implementation detail) and what was tested and found NOT to
+  work (`?matter=`-style server-side filtering).
+- Deliberately does **not** depend on the Next.js build id (`buildId`,
+  which changes on every site deploy) — re-parses the embedded JSON
+  fresh on every request rather than hardcoding a build-specific URL, so
+  an ordinary redeploy doesn't break it; only an actual page/data-shape
+  redesign would (and does so loudly, via `ConnectorFetchError`, never
+  silently).
+- Cursor tracks `last_seen_date` (ISO 8601 string comparison); dedup's
+  real safety net is still the module's own `(source_id, external_id)`
+  order, `external_id` being the site's own stable article id.
+- Offline test suite mocks `requests.get` at `services.http_retry`
+  against a realistic fixture HTML embedding `__NEXT_DATA__` — no real
+  network call, per this project's hard rule.
+
 ## [18.0.8.0.0] - Unreleased — Phase 8 (OpenFisca connector)
 
 ### Added

@@ -36,6 +36,7 @@ class LegalWatch(models.Model):
             ("rss", "RSS/Atom"),
             ("legifrance", "Légifrance / PISTE"),
             ("openfisca", "OpenFisca (paramètres législatifs)"),
+            ("open_lefebvre_dalloz", "Open Lefebvre Dalloz"),
         ],
         string="Connector", required=True, default="manual",
     )

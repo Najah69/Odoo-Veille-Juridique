@@ -114,8 +114,8 @@ flowchart LR
   <br>❌ It is not a SaaS — everything runs inside your own Odoo instance,
   your data stays with you.
 
-## Status: Phase 8 (OpenFisca connector)
-## Statut : Phase 8 (connecteur OpenFisca)
+## Status: Phase 9 (Open Lefebvre Dalloz connector)
+## Statut : Phase 9 (connecteur Open Lefebvre Dalloz)
 
 - Manual import (file upload or pasted text).
   <br>Import manuel (fichier téléversé ou texte collé).
@@ -147,6 +147,21 @@ flowchart LR
   RSS/Légifrance. Voir `docs/openfisca.md` pour ce qui a été vérifié
   contre la vraie API publique `api.fr.openfisca.org` vs. ce qui est
   explicitement hors périmètre (paramètres barème).
+- **Open Lefebvre Dalloz connector**: watches the free legal-news portal
+  `open.lefebvre-dalloz.fr/actualites`. No documented public API/RSS
+  exists for this site (checked live); parses the `__NEXT_DATA__` JSON
+  every Next.js page embeds in its raw HTML instead — real structured
+  data, but an internal implementation detail, not a stable contract
+  like Légifrance/OpenFisca. See `docs/open-lefebvre-dalloz.md` for the
+  full grounding and honest residual-risk disclosure.
+  <br>**Connecteur Open Lefebvre Dalloz** : surveille le portail
+  juridique gratuit `open.lefebvre-dalloz.fr/actualites`. Aucune API
+  publique/RSS documentée n'existe pour ce site (vérifié en direct) ;
+  parse à la place le JSON `__NEXT_DATA__` que chaque page Next.js
+  intègre dans son HTML brut — une vraie donnée structurée, mais un
+  détail d'implémentation interne, pas un contrat stable comme
+  Légifrance/OpenFisca. Voir `docs/open-lefebvre-dalloz.md` pour
+  l'ancrage complet et la divulgation honnête des risques résiduels.
 - **Deterministic relevance rules** (keyword/regex/source-field →
   include/exclude/score/tag/requires_review), evaluated before ingestion.
   <br>**Règles de pertinence déterministes** (mot-clé/regex/champ-source
@@ -297,7 +312,8 @@ For an RSS watch instead, see `docs/operations.md` ("Adding a new RSS watch
 — minimal example") and the connector/rule contract in `docs/connectors.md`.
 For a Légifrance/PISTE watch, see `docs/legifrance-piste.md`. For an
 OpenFisca watch (specific legislative parameters, not a document feed),
-see `docs/openfisca.md`. To store content in OCA DMS instead of
+see `docs/openfisca.md`. For an Open Lefebvre Dalloz watch, see
+`docs/open-lefebvre-dalloz.md`. To store content in OCA DMS instead of
 `ir.attachment`, see `docs/oca-dms-integration.md`. To classify documents
 with AI or export approved ones to a RAG/vector-store service, see
 `docs/ai-providers.md`.
@@ -307,8 +323,9 @@ minimal example ») et le contrat connecteur/règle dans
 `docs/connectors.md`. Pour une veille Légifrance/PISTE, voir
 `docs/legifrance-piste.md`. Pour une veille OpenFisca (des paramètres
 législatifs précis, pas un flux de documents), voir
-`docs/openfisca.md`. Pour stocker le contenu dans OCA DMS plutôt
-que dans `ir.attachment`, voir `docs/oca-dms-integration.md`. Pour
+`docs/openfisca.md`. Pour une veille Open Lefebvre Dalloz, voir
+`docs/open-lefebvre-dalloz.md`. Pour stocker le contenu dans OCA DMS
+plutôt que dans `ir.attachment`, voir `docs/oca-dms-integration.md`. Pour
 classifier des documents avec l'IA ou exporter les documents validés vers
 un service RAG/vector-store, voir `docs/ai-providers.md`.
 
