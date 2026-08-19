@@ -36,5 +36,42 @@
             <field name="user_id" ref="base.user_root"/>
         </record>
 
+        <record id="ir_action_server_legal_reconcile" model="ir.actions.server">
+            <field name="name">Legal Knowledge Watch: Reconcile</field>
+            <field name="model_id" ref="model_legal_knowledge_document"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_reconcile_exports()</field>
+        </record>
+
+        <record id="ir_cron_legal_reconcile" model="ir.cron">
+            <field name="cron_name">Legal Knowledge Watch: Reconcile</field>
+            <field name="ir_actions_server_id" ref="ir_action_server_legal_reconcile"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+            <field name="user_id" ref="base.user_root"/>
+        </record>
+
+        <!-- Disabled by default: retention purges data. Enabling this cron
+             runs it in dry_run mode only (logs what would happen, writes
+             nothing) — a real run requires an explicit
+             model._cron_apply_retention(dry_run=False) call, e.g. from a
+             one-off scheduled action or the Odoo shell, never silently. -->
+        <record id="ir_action_server_legal_retention" model="ir.actions.server">
+            <field name="name">Legal Knowledge Watch: Apply Retention (dry run)</field>
+            <field name="model_id" ref="model_legal_knowledge_document"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_apply_retention(dry_run=True)</field>
+        </record>
+
+        <record id="ir_cron_legal_retention" model="ir.cron">
+            <field name="cron_name">Legal Knowledge Watch: Apply Retention (dry run)</field>
+            <field name="ir_actions_server_id" ref="ir_action_server_legal_retention"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">weeks</field>
+            <field name="active" eval="False"/>
+            <field name="user_id" ref="base.user_root"/>
+        </record>
+
     </data>
 </odoo>

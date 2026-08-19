@@ -11,3 +11,7 @@ from . import test_legifrance_connector
 from . import test_enrichment_schema
 from . import test_ai_providers
 from . import test_ai_job_processing
+from . import test_export_policy
+from . import test_reconciliation
+from . import test_retention
+from . import test_filesystem_provider

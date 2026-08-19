@@ -17,6 +17,7 @@ class LegalAiProvider(models.Model):
         selection=[
             ("ai_brain_http", "AI-Brain (HTTP)"),
             ("webhook", "Generic Webhook"),
+            ("filesystem", "Filesystem (JSONL export, no network)"),
         ],
         string="Provider Type", required=True, default="webhook",
     )

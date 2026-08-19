@@ -14,10 +14,43 @@
                 <field name="source_id"/>
                 <field name="document_type"/>
                 <field name="status"/>
+                <field name="export_state"/>
                 <field name="collected_at"/>
                 <field name="needs_review"/>
                 <field name="active" column_invisible="True"/>
             </list>
+        </field>
+    </record>
+
+    <record id="view_legal_document_search" model="ir.ui.view">
+        <field name="name">legal.knowledge.document.search</field>
+        <field name="model">legal.knowledge.document</field>
+        <field name="arch" type="xml">
+            <search string="Legal Knowledge Documents">
+                <field name="name"/>
+                <field name="reference"/>
+                <field name="source_id"/>
+                <field name="tag_ids"/>
+                <filter name="filter_needs_review" string="Needs Review"
+                        domain="[('needs_review', '=', True)]"/>
+                <filter name="filter_approved_not_exported" string="Approved &amp; Not Exported"
+                        domain="[('status', '=', 'approved'),
+                                 ('export_state', 'in', ('not_requested', 'queued'))]"/>
+                <filter name="filter_export_failed" string="Export Failed"
+                        domain="[('export_state', '=', 'failed')]"/>
+                <filter name="filter_export_stale" string="Export Stale"
+                        domain="[('export_state', '=', 'stale')]"/>
+                <filter name="filter_export_blocked" string="Export Blocked"
+                        domain="[('export_state', '=', 'blocked')]"/>
+                <separator/>
+                <filter name="filter_not_current" string="Superseded (not current)"
+                        domain="[('is_current', '=', False)]"/>
+                <group string="Group By">
+                    <filter name="group_by_status" string="Status" context="{'group_by': 'status'}"/>
+                    <filter name="group_by_export_state" string="Export State" context="{'group_by': 'export_state'}"/>
+                    <filter name="group_by_source" string="Source" context="{'group_by': 'source_id'}"/>
+                </group>
+            </search>
         </field>
     </record>
 

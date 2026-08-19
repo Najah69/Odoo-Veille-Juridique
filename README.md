@@ -8,7 +8,7 @@ a locally-owned document history.
 > tax or accounting advice, and it does not replace consultation with a
 > qualified lawyer, accountant or other professional.**
 
-## Status: Phase 4 (agnostic AI/export providers)
+## Status: Phase 5 (reconciliation & retention)
 
 - Manual import (file upload or pasted text).
 - **RSS/Atom connector**: conditional GET (ETag/Last-Modified), bounded
@@ -26,12 +26,23 @@ a locally-owned document history.
   (`auto`/`dms`/`attachment`) — never a hard dependency; see
   `docs/oca-dms-integration.md`.
 - **Agnostic AI/export provider layer** (`legal.ai.provider`/`legal.ai.job`/
-  `legal.document.enrichment`): a generic `webhook` provider plus an
-  `ai_brain_http` provider implementing this project's own documented HTTP
-  contract. AI never overrides a human decision — classification only ever
-  sets a "needs review" flag, and export only ever runs for approved,
-  current, non-empty, primary/high-trust documents, policy re-checked
-  fresh on every job attempt. See `docs/ai-providers.md`.
+  `legal.document.enrichment`): `webhook`, `ai_brain_http` (this project's
+  own documented HTTP contract) and a network-free `filesystem` (JSONL)
+  provider. AI never overrides a human decision — classification only ever
+  sets a "needs review" flag, and export is gated by a configurable,
+  fail-closed policy re-checked fresh on every job attempt. See
+  `docs/ai-providers.md`.
+- **Configurable export policies** (`legal.export.policy`, per
+  company/source/watch) and a **reconciliation cron** that detects and
+  repairs drift (missing exports, superseded-but-still-exported documents,
+  stuck jobs/runs) without ever deleting local history — Odoo remains the
+  durable registry, any export index is a reconstructible projection.
+- **Retention** (`legal.retention.policy`): archive old rejected documents
+  (reversible), then — only after a separate explicit grace period —
+  purge just the binary content of non-current (superseded) versions on
+  already-archived documents. The current version and every metadata row
+  are never touched. Dry-run by default; a real run is always a
+  deliberate action. See `docs/operations.md`.
 - Normalization, SHA-256 content hashing, deduplication, version history.
 - Document review workflow (`new → qualified → review → approved/rejected →
   archived/superseded`).

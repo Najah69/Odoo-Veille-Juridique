@@ -24,15 +24,22 @@ Phase 3: Légifrance/PISTE connector (LODA collection — lois, ordonnances,
 décrets, arrêtés). See docs/legifrance-piste.md for exactly what was
 verified against real sources vs. what still needs checking against a
 live PISTE sandbox account.
-Phase 4 (this version): agnostic AI/export provider layer. The core never
-imports a specific provider — AI-Brain (a generic HTTP contract, see
+Phase 4: agnostic AI/export provider layer. The core never imports a
+specific provider — AI-Brain (a generic HTTP contract, see
 docs/ai-providers.md) is one provider_type among others, alongside a
 minimal generic webhook provider. AI never overrides human decisions:
 classification results only ever set a "needs review" flag, and export to
 any provider only ever happens for approved, current, non-empty,
 primary/high-trust documents — enforced by policy, not by convention.
+Phase 5 (this version): configurable export policies, reconciliation
+(detects and repairs drift between local state and any export index —
+never by deleting local history), retention (archive, then — well after
+an explicit grace period — purge only non-current version binaries; the
+current version and every metadata row are always kept), and a
+network-free filesystem/JSONL export provider. Odoo remains the durable
+registry; any export index is a reconstructible projection of it.
     """,
-    "version": "18.0.5.0.0",
+    "version": "18.0.6.0.0",
     "category": "Tools",
     "author": "Chapeau Blanc Group, Community Contributors",
     "website": "https://github.com/Najah69/odoo-legal-knowledge-watch",
@@ -59,6 +66,8 @@ primary/high-trust documents — enforced by policy, not by convention.
         "views/legal_dms_directory_route_views.xml",
         "views/legal_ai_provider_views.xml",
         "views/legal_ai_job_views.xml",
+        "views/legal_export_policy_views.xml",
+        "views/legal_retention_policy_views.xml",
         "wizard/legal_manual_import_wizard_views.xml",
         "views/menus.xml",
     ],

@@ -49,4 +49,17 @@
               parent="menu_legal_configuration"
               action="action_legal_ai_provider" sequence="40"/>
 
+    <menuitem id="menu_legal_export_policy" name="Export Policies"
+              parent="menu_legal_configuration"
+              action="action_legal_export_policy" sequence="50"/>
+
+    <menuitem id="menu_legal_retention_policy" name="Retention Policies"
+              parent="menu_legal_configuration"
+              action="action_legal_retention_policy" sequence="60"/>
+
+    <menuitem id="menu_legal_retention_wizard" name="Apply Retention"
+              parent="menu_legal_configuration"
+              action="action_legal_retention_wizard" sequence="70"
+              groups="legal_knowledge_watch.group_legal_watch_administrator"/>
+
 </odoo>

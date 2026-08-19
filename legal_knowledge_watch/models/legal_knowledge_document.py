@@ -1,9 +1,14 @@
 import json
+import logging
 import uuid
+from datetime import timedelta
 
 from odoo import api, fields, models
 
 from ..services import deduplication_service, normalize_service, storage_service
+from .legal_export_policy import TRUST_LEVEL_ORDER
+
+_logger = logging.getLogger(__name__)
 
 # Allowed status transitions (see docs/architecture.md - document lifecycle).
 _ALLOWED_TRANSITIONS = {
@@ -128,10 +133,17 @@ class LegalKnowledgeDocument(models.Model):
             ("not_requested", "Not Requested"),
             ("queued", "Queued"),
             ("exported", "Exported"),
+            ("stale", "Stale (content changed since last export)"),
             ("failed", "Failed"),
             ("blocked", "Blocked"),
         ],
         string="Export State", required=True, default="not_requested",
+    )
+    archived_at = fields.Datetime(
+        string="Archived At", readonly=True,
+        help="Set when the document is archived. Used by retention policies "
+             "to time the grace period before old-version binaries are "
+             "purged — see legal.retention.policy.",
     )
     enrichment_ids = fields.One2many(
         comodel_name="legal.document.enrichment", inverse_name="document_id",
@@ -193,7 +205,7 @@ class LegalKnowledgeDocument(models.Model):
     def action_archive_document(self):
         for document in self:
             document._check_transition("archived")
-            document.status = "archived"
+            document.write({"status": "archived", "archived_at": fields.Datetime.now()})
 
     def action_view_versions(self):
         self.ensure_one()
@@ -265,8 +277,13 @@ class LegalKnowledgeDocument(models.Model):
             document.export_state = "queued"
 
     def _check_export_policy(self):
-        """Fail-closed export policy: approved, current, non-empty text,
-        source trust_level primary/high. Returns (allowed: bool,
+        """Fail-closed export policy. The floor below is unconditional and
+        cannot be loosened by any legal.export.policy record: approved,
+        current, canonical_url and content_hash present, non-empty text.
+        On top of that floor, the most specific matching
+        legal.export.policy (company/source/watch) — or the Phase 4
+        default (min trust_level 'high') if none is configured — adds
+        trust_level/review/score/length gates. Returns (allowed: bool,
         reason: str|None).
         """
         self.ensure_one()
@@ -274,12 +291,36 @@ class LegalKnowledgeDocument(models.Model):
             return False, "document status is not 'approved'"
         if not self.is_current:
             return False, "document is not the current one (superseded)"
-        if not (self.current_version_text or "").strip():
+        if not self.canonical_url:
+            return False, "document has no canonical_url"
+        if not self.content_hash:
+            return False, "document has no content_hash"
+        text = (self.current_version_text or "").strip()
+        if not text:
             return False, "document has no normalized text"
-        if self.source_id.trust_level not in ("primary", "high"):
+
+        policy = self.env["legal.export.policy"]._resolve(self)
+        min_trust_level, require_review_cleared, min_score, max_length = (
+            (policy.min_trust_level, policy.require_review_cleared,
+             policy.min_relevance_score, policy.max_text_length)
+            if policy else ("high", False, 0.0, 0)
+        )
+        if TRUST_LEVEL_ORDER.get(self.source_id.trust_level, -1) < TRUST_LEVEL_ORDER.get(min_trust_level, 99):
             return False, (
-                f"source trust_level '{self.source_id.trust_level}' is not "
-                f"'primary' or 'high'"
+                f"source trust_level '{self.source_id.trust_level}' is below "
+                f"the required minimum '{min_trust_level}'"
+            )
+        if require_review_cleared and self.needs_review:
+            return False, "document still needs human review"
+        if self.relevance_score < min_score:
+            return False, (
+                f"relevance_score {self.relevance_score} is below the "
+                f"required minimum {min_score}"
+            )
+        if max_length and len(text) > max_length:
+            return False, (
+                f"normalized text length {len(text)} exceeds the maximum "
+                f"{max_length}"
             )
         return True, None
 
@@ -468,6 +509,12 @@ class LegalKnowledgeDocument(models.Model):
                 "last_checked_at": fields.Datetime.now(),
                 "relevance_score": candidate.get("relevance_score", document.relevance_score),
             })
+            if document.export_state == "exported":
+                # The previously exported copy no longer matches the
+                # current content — flag it rather than silently leaving
+                # a stale export_state='exported'. Reconciliation
+                # (_cron_reconcile_exports) re-queues a fresh export.
+                document.export_state = "stale"
         document.message_post(
             body=self.env._(
                 "New version collected (previous version kept in history)."
@@ -493,3 +540,165 @@ class LegalKnowledgeDocument(models.Model):
         result.setdefault("attachment_id", False)
         result.setdefault("dms_file_res_id", False)
         return result
+
+    # -- Reconciliation ----------------------------------------------
+    @api.model
+    def _cron_reconcile_exports(self, batch_size=50):
+        """Odoo/DMS is the durable registry; any RAG/export index is a
+        derived, reconstructible projection. This detects drift between
+        the two and repairs it — never by deleting local history, only by
+        (re)queuing jobs or flagging state. See docs/operations.md.
+        """
+        self._reconcile_superseded_but_exported()
+        self._reconcile_missing_exports(batch_size)
+        self.env["legal.ai.job"]._reconcile_stuck_jobs()
+        self.env["legal.ingestion.run"]._reconcile_stuck_runs()
+
+    def _reconcile_superseded_but_exported(self):
+        stale_exported = self.search([
+            ("export_state", "in", ("exported", "queued")),
+            ("is_current", "=", False),
+        ])
+        providers = self.env["legal.ai.provider"].search([
+            ("active", "=", True), ("enabled_for_export", "=", True),
+        ])
+        job_model = self.env["legal.ai.job"]
+        for document in stale_exported:
+            document.export_state = "stale"
+            for provider in providers:
+                pending = job_model.search_count([
+                    ("document_id", "=", document.id), ("provider_id", "=", provider.id),
+                    ("job_type", "=", "delete_export"),
+                    ("state", "in", ("pending", "retry", "running")),
+                ])
+                if not pending:
+                    job_model.create({
+                        "document_id": document.id, "provider_id": provider.id,
+                        "job_type": "delete_export",
+                    })
+            document.message_post(body=self.env._(
+                "Reconciliation: document is no longer current but was "
+                "still marked exported — queued for de-indexing."
+            ))
+
+    def _reconcile_missing_exports(self, batch_size):
+        providers = self.env["legal.ai.provider"].search([
+            ("active", "=", True), ("enabled_for_export", "=", True),
+        ])
+        if not providers:
+            return
+        candidates = self.search([
+            ("status", "=", "approved"), ("is_current", "=", True),
+            ("export_state", "in", ("not_requested", "stale", "failed")),
+        ], limit=batch_size)
+        job_model = self.env["legal.ai.job"]
+        for document in candidates:
+            allowed, _reason = document._check_export_policy()
+            if not allowed:
+                continue
+            for provider in providers:
+                pending = job_model.search_count([
+                    ("document_id", "=", document.id), ("provider_id", "=", provider.id),
+                    ("job_type", "=", "export"),
+                    ("state", "in", ("pending", "retry", "running")),
+                ])
+                if not pending:
+                    job_model.create({
+                        "document_id": document.id, "provider_id": provider.id,
+                        "job_type": "export",
+                    })
+            document.export_state = "queued"
+
+    # -- Retention -----------------------------------------------------
+    @api.model
+    def _cron_apply_retention(self, dry_run=False, batch_size=50):
+        """dry_run=True (or the "Retention (Dry Run)" server action) logs
+        what WOULD happen without writing anything. See
+        legal.retention.policy and docs/operations.md — this only ever
+        archives (reversible status change) and, well after that, purges
+        the binary content of non-current versions on already-archived
+        documents. The current version and every metadata row are always
+        kept.
+        """
+        report = {"archived": [], "purged_versions": []}
+        self._apply_retention_archive(report, dry_run, batch_size)
+        self._apply_retention_purge(report, dry_run, batch_size)
+        _logger.info(
+            "Legal Knowledge Watch retention run (dry_run=%s): %s",
+            dry_run, report,
+        )
+        return report
+
+    def _apply_retention_archive(self, report, dry_run, batch_size):
+        policies = self.env["legal.retention.policy"].search([
+            ("archive_rejected_after_days", ">", 0),
+        ])
+        for policy in policies:
+            domain = [("status", "=", "rejected")]
+            if policy.company_id:
+                domain.append(("company_id", "=", policy.company_id.id))
+            if policy.source_id:
+                domain.append(("source_id", "=", policy.source_id.id))
+            threshold = fields.Datetime.now() - timedelta(
+                days=policy.archive_rejected_after_days
+            )
+            domain.append(("last_checked_at", "<=", threshold))
+            for document in self.search(domain, limit=batch_size):
+                report["archived"].append(document.reference)
+                if not dry_run:
+                    document.action_archive_document()
+                    document.message_post(body=self.env._(
+                        "Retention policy '%(policy)s': archived (rejected "
+                        "and unchanged for %(days)s+ days).",
+                        policy=policy.name, days=policy.archive_rejected_after_days,
+                    ))
+
+    def _apply_retention_purge(self, report, dry_run, batch_size):
+        policies = self.env["legal.retention.policy"].search([
+            ("delete_binary_after_archived_days", ">", 0),
+        ])
+        for policy in policies:
+            domain = [("status", "=", "archived"), ("archived_at", "!=", False)]
+            if policy.company_id:
+                domain.append(("company_id", "=", policy.company_id.id))
+            if policy.source_id:
+                domain.append(("source_id", "=", policy.source_id.id))
+            threshold = fields.Datetime.now() - timedelta(
+                days=policy.delete_binary_after_archived_days
+            )
+            domain.append(("archived_at", "<=", threshold))
+            for document in self.search(domain, limit=batch_size):
+                old_versions = document.version_ids.filtered(lambda v: not v.is_current)
+                for version in old_versions:
+                    self._purge_version_binary(document, version, report, dry_run)
+
+    def _purge_version_binary(self, document, version, report, dry_run):
+        label = f"{document.reference}#v{version.sequence}"
+        if version.storage_backend == "attachment" and version.attachment_id:
+            report["purged_versions"].append(label)
+            if not dry_run:
+                version.attachment_id.unlink()
+                version.write({
+                    "attachment_id": False,
+                    "change_summary": (
+                        (version.change_summary or "")
+                        + "\n[retention] binary purged"
+                    ),
+                })
+        elif version.storage_backend == "dms" and version.dms_file_res_id:
+            from ..services.storage_dms import DmsStorageBackend
+
+            if not DmsStorageBackend(self.env).is_available():
+                return
+            report["purged_versions"].append(label)
+            if dry_run:
+                return
+            try:
+                self.env["dms.file"].sudo().browse(version.dms_file_res_id).unlink()
+            except Exception as exc:  # noqa: BLE001 - never let a purge failure abort the batch
+                _logger.warning(
+                    "Retention: failed to purge dms.file %s for %s: %s",
+                    version.dms_file_res_id, document.reference, exc,
+                )
+                return
+            version.write({"dms_file_res_id": False})

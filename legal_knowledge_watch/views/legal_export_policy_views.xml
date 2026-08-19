@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_legal_export_policy_list" model="ir.ui.view">
+        <field name="name">legal.export.policy.list</field>
+        <field name="model">legal.export.policy</field>
+        <field name="arch" type="xml">
+            <list string="Export Policies" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="source_id"/>
+                <field name="watch_id"/>
+                <field name="min_trust_level"/>
+                <field name="require_review_cleared"/>
+                <field name="min_relevance_score"/>
+                <field name="max_text_length"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_legal_export_policy" model="ir.actions.act_window">
+        <field name="name">Export Policies</field>
+        <field name="res_model">legal.export.policy</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Without any policy, the default applies: source trust_level
+                must be at least "high". Add a policy to refine this per
+                company/source/watch (the most specific match wins). See
+                docs/ai-providers.md.
+            </p>
+        </field>
+    </record>
+
+</odoo>

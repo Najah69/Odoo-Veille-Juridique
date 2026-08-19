@@ -2,6 +2,55 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [18.0.6.0.0] - Unreleased — Phase 5
+
+### Added
+- `legal.export.policy`: configurable export gate per company/source/watch
+  (most specific match wins) on top of an unconditional floor (approved,
+  current, `canonical_url`/`content_hash` present, non-empty text) that no
+  policy can loosen. With no policy configured, the Phase 4 default
+  (`min_trust_level=high`) applies unchanged — upgrading is a no-op until
+  an admin deliberately configures something.
+- `legal.retention.policy` + `legal.knowledge.document.archived_at` +
+  `_cron_apply_retention(dry_run=...)`: archives old `rejected` documents
+  (reversible), then — only after a *separate* explicit grace period from
+  `archived_at` — purges the stored binary of **non-current versions
+  only** on already-archived documents. The current version's content and
+  every version/document metadata row are never touched by retention,
+  under any configuration. The scheduled cron is disabled by default and,
+  even enabled, only ever runs `dry_run=True`; a real run requires the new
+  **Apply Retention** wizard — always a deliberate, one-off action.
+- `export_state` gains `stale`: a document whose exported copy no longer
+  matches current content (new version arrived) or is no longer current
+  (superseded) is flagged rather than left silently marked `exported`.
+- `legal.knowledge.document._cron_reconcile_exports()` (daily, enabled by
+  default, purely corrective): re-queues missing exports for
+  approved/current/policy-eligible documents, queues `delete_export` jobs
+  for superseded-but-still-exported documents, resets `legal.ai.job`
+  stuck in `running` >1h, and marks `legal.ingestion.run` stuck in
+  `running` >2h as `failed`. Every repair is idempotent (checks for an
+  already-pending job before creating another) and logged.
+- `services/filesystem_jsonl_provider.py`: network-free export provider —
+  one JSON file per document (`<directory>/<reference>.json`), upsert =
+  overwrite = trivially idempotent. Lets a local index be rebuilt with
+  zero external service. Filename sanitization was hardened after writing
+  its test: path separators are stripped and runs of dots are collapsed,
+  so a malicious `reference` (e.g. containing `../`) can never traverse
+  outside the configured directory or leave confusing residue in the
+  filename.
+- Document list search view: filters for "Approved & Not Exported",
+  "Export Failed", "Export Stale", "Export Blocked", "Superseded", plus
+  group-by status/export_state/source — the "report" this phase asked for,
+  built as filters on the existing list rather than a new dashboard model.
+- Test suite: export policy resolution/precedence and every configurable
+  gate, reconciliation (stale-flagging, missing-export re-queueing,
+  idempotence, policy-aware skipping, stuck job/run reset), retention
+  (archive dry-run/real/too-recent/idempotent, purge
+  dry-run/real/current-version-preserved/idempotent), filesystem provider
+  (including the path-traversal-hardening test above) — all against real
+  local state (no HTTP involved in most of these; the few that are mock
+  `requests` as usual).
+
 ## [18.0.5.0.0] - Unreleased — Phase 4
 
 ### Added

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_legal_retention_policy_list" model="ir.ui.view">
+        <field name="name">legal.retention.policy.list</field>
+        <field name="model">legal.retention.policy</field>
+        <field name="arch" type="xml">
+            <list string="Retention Policies" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="source_id"/>
+                <field name="archive_rejected_after_days"/>
+                <field name="delete_binary_after_archived_days"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_legal_retention_policy" model="ir.actions.act_window">
+        <field name="name">Retention Policies</field>
+        <field name="res_model">legal.retention.policy</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Without any policy (or with 0 in a field), nothing is
+                auto-archived or purged. Only the current version's content
+                and every metadata row are ever kept regardless of
+                configuration — see docs/operations.md.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_legal_retention_wizard_form" model="ir.ui.view">
+        <field name="name">legal.retention.wizard.form</field>
+        <field name="model">legal.retention.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Apply Retention">
+                <group>
+                    <field name="dry_run"/>
+                    <p class="text-muted">
+                        Dry run only reports what would happen — nothing is
+                        archived or purged. Uncheck to actually apply the
+                        configured retention policies.
+                    </p>
+                </group>
+                <footer>
+                    <button name="action_apply" type="object" string="Run"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_legal_retention_wizard" model="ir.actions.act_window">
+        <field name="name">Apply Retention</field>
+        <field name="res_model">legal.retention.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

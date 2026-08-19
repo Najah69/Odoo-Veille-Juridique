@@ -8,4 +8,6 @@ from . import legal_dms_directory_route
 from . import legal_ai_provider
 from . import legal_ai_job
 from . import legal_document_enrichment
+from . import legal_export_policy
+from . import legal_retention_policy
 from . import legal_knowledge_document

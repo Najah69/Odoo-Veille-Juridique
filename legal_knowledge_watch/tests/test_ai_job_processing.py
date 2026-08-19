@@ -74,8 +74,11 @@ class TestAiJobProcessing(LegalWatchTransactionCase):
             "trust_level": trust_level,
         })
         result = self.env["legal.knowledge.document"]._ingest_candidate(
-            self._candidate(source_id=source.id, external_id=f"EXT-{trust_level}-{status}-{unique}",
-                             plain_text=f"{plain_text} (unique {unique})")
+            self._candidate(
+                source_id=source.id, external_id=f"EXT-{trust_level}-{status}-{unique}",
+                plain_text=f"{plain_text} (unique {unique})",
+                canonical_url=f"https://exemple.gouv.example.org/test-{unique}",
+            )
         )
         document = result["document"]
         if status == "approved":

@@ -16,3 +16,4 @@ from . import ai_provider_base
 from . import ai_provider_registry
 from . import generic_webhook_provider
 from . import ai_brain_provider
+from . import filesystem_jsonl_provider

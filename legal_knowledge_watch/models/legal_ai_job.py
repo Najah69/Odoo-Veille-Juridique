@@ -117,6 +117,30 @@ class LegalAiJob(models.Model):
             if job.state == "pending":
                 job._process()
 
+    @api.model
+    def _reconcile_stuck_jobs(self, stuck_after_minutes=60):
+        """A job left in 'running' this long almost certainly means the
+        worker crashed mid-attempt (the row lock itself is released
+        automatically by PostgreSQL in that case — see
+        _try_lock_for_run() — but the job's own 'running' state is not).
+        Reset to 'retry' with an immediate next_attempt_at rather than
+        left stuck forever.
+        """
+        threshold = fields.Datetime.now() - timedelta(minutes=stuck_after_minutes)
+        stuck = self.search([
+            ("state", "=", "running"), ("write_date", "<=", threshold),
+        ])
+        for job in stuck:
+            job.write({
+                "state": "retry",
+                "next_attempt_at": fields.Datetime.now(),
+                "last_error": (
+                    (job.last_error or "")
+                    + "\nReconciliation: job was stuck in 'running' "
+                      "(likely a crash) and was reset."
+                ),
+            })
+
     def _process(self):
         self.ensure_one()
         if not self._try_lock_for_run():

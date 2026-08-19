@@ -10,9 +10,18 @@ connectors (`connector_registry.py`). Two providers ship with this module:
 
 - `webhook` (`generic_webhook_provider.py`): the simplest possible example
   — a single URL, one JSON body with an `"action"` discriminator. Use it
-  as a template for a new provider (Qdrant, OpenWebUI, AnythingLLM,
-  filesystem JSONL, MCP...).
+  as a template for a new provider (Qdrant, OpenWebUI, AnythingLLM, MCP...).
 - `ai_brain_http` (`ai_brain_provider.py`): implements the contract below.
+- `filesystem` (`filesystem_jsonl_provider.py`): no network at all — one
+  JSON file per document (`<directory>/<reference>.json`), configured via
+  `configuration_json: {"directory": "/path/to/export"}`. Writing always
+  overwrites the file for that reference, so upsert is trivially
+  idempotent without needing an `Idempotency-Key`. `classify()` raises
+  (a flat file has nothing to classify against) — leave
+  `enabled_for_classification` off for this provider_type. Lets you
+  rebuild a local index (e.g. by globbing `*.json`) with zero external
+  service, matching the "Odoo is the durable registry, any index is a
+  reconstructible projection" principle end to end.
 
 **AI is never the source of truth.** `legal.knowledge.document` (status,
 hash, dates, source) always wins. AI output only ever:
@@ -122,16 +131,31 @@ durable record either way (see `docs/architecture.md`).
 
 `legal.ai.job._run_export()` re-checks this fresh every time the job runs
 (not just once at approval time), via
-`legal.knowledge.document._check_export_policy()`:
+`legal.knowledge.document._check_export_policy()`. Two layers:
 
-- `status == 'approved'`
-- `is_current == True`
-- normalized text is non-empty
-- `source_id.trust_level` is `primary` or `high`
+**Unconditional floor** (no `legal.export.policy` can loosen this):
+`status == 'approved'`, `is_current == True`, `canonical_url` and
+`content_hash` are set, and normalized text is non-empty.
+
+**Configurable refinement** — the most specific active
+`legal.export.policy` matching the document's company/source/watch (source-
+or watch-specific beats company-specific beats global; see
+`legal.export.policy._resolve()`), or, with **no policy configured at
+all**, the Phase 4 default (`min_trust_level = high`,
+`require_review_cleared = False`, no score/length gate — this keeps
+upgrading the module a no-op until an admin deliberately configures
+something stricter or more lenient):
+
+| Field | Effect |
+|---|---|
+| `min_trust_level` | `source_id.trust_level` must be at least this (`low < medium < high < primary`) |
+| `require_review_cleared` | if set, `needs_review` must be `False` |
+| `min_relevance_score` | `relevance_score` must be at least this |
+| `max_text_length` | normalized text must not exceed this (0 = unlimited) |
 
 If any check fails, the job is cancelled (`state=cancelled`,
 `document.export_state='blocked'`) **without ever calling the provider** —
-no network call, no partial export.
+no network call, no partial export. Configuration → **Export Policies**.
 
 ## Secrets
 

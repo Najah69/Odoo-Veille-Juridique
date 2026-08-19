@@ -1,4 +1,6 @@
-from odoo import fields, models
+from datetime import timedelta
+
+from odoo import api, fields, models
 
 
 class LegalIngestionRun(models.Model):
@@ -57,3 +59,26 @@ class LegalIngestionRun(models.Model):
         comodel_name="res.company", string="Company",
         default=lambda self: self.env.company,
     )
+
+    @api.model
+    def _reconcile_stuck_runs(self, stuck_after_minutes=120):
+        """A run left in 'running' this long almost certainly means the
+        worker crashed mid-execution. Marked failed (not retried
+        automatically here): the watch's own next scheduled/manual run
+        creates a fresh, independent run — see
+        legal.knowledge.document._cron_reconcile_exports().
+        """
+        threshold = fields.Datetime.now() - timedelta(minutes=stuck_after_minutes)
+        stuck = self.search([
+            ("state", "=", "running"), ("started_at", "<=", threshold),
+        ])
+        for run in stuck:
+            run.write({
+                "state": "failed",
+                "finished_at": fields.Datetime.now(),
+                "log_excerpt": (
+                    (run.log_excerpt or "")
+                    + "\nReconciliation: run was stuck in 'running' "
+                      "(likely a crash) and was marked failed."
+                ),
+            })
