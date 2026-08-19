@@ -6,6 +6,7 @@ from . import rss_connector
 from . import secrets_service
 from . import piste_oauth_client
 from . import legifrance_connector
+from . import openfisca_connector
 from . import relevance_service
 from . import storage_service
 from . import storage_dms

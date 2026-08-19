@@ -2,6 +2,32 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [18.0.8.0.0] - Unreleased — Phase 8 (OpenFisca connector)
+
+### Added
+- `services/openfisca_connector.py` (`connector_code = "openfisca"`):
+  watches specific legislative *parameters* (e.g. `marche_travail.
+  salaire_minimum.smic.smic_b_horaire`, `prelevements_sociaux.pss.
+  plafond_securite_sociale_mensuel` — the two `DEFAULT_PARAMETERS`, each
+  individually verified live) for a new dated value — a different content
+  model from RSS/Légifrance's document feed. Grounded against the real,
+  public, unauthenticated `api.fr.openfisca.org` API and cross-checked
+  against the open-source `openfisca-france` parameter source files
+  (never guessed); see `docs/openfisca.md` for the full breakdown,
+  including what's explicitly out of scope (scale/bareme parameters — a
+  structurally different `"brackets"` response shape, detected and
+  reported as a per-parameter error rather than force-parsed).
+- Cursor tracks the last-seen effective date per watched parameter;
+  first run for a parameter surfaces only its current value (never
+  backfills decades of history), later runs surface only strictly newer
+  dates. Reuses the shared `services/http_retry.py` (bounded retry, SSRF
+  host check, no redirects followed, response size cap) rather than a
+  new bespoke retry loop.
+- `legal.watch.connector_code` gains the `openfisca` option.
+- Offline test suite (`tests/test_openfisca_connector.py`): mocks
+  `requests.get` at `services.http_retry` — no real network call, per
+  this project's hard rule.
+
 ## [Unreleased] — Phase 7 (public docs / GitHub publish prep)
 
 ### Added

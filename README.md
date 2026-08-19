@@ -114,8 +114,8 @@ flowchart LR
   <br>❌ It is not a SaaS — everything runs inside your own Odoo instance,
   your data stays with you.
 
-## Status: Phase 6 (security audit & release candidate)
-## Statut : Phase 6 (audit sécurité & release candidate)
+## Status: Phase 8 (OpenFisca connector)
+## Statut : Phase 8 (connecteur OpenFisca)
 
 - Manual import (file upload or pasted text).
   <br>Import manuel (fichier téléversé ou texte collé).
@@ -135,6 +135,18 @@ flowchart LR
   `docs/legifrance-piste.md` pour le détail exact de ce qui a été vérifié
   contre de vraies sources (aucun compte PISTE disponible pour un test en
   conditions réelles) vs. ce qui reste à vérifier sur un vrai sandbox.
+- **OpenFisca connector**: watches specific legislative *parameters*
+  (SMIC, plafond de la Sécurité sociale...) for a new dated value —
+  a different content model from RSS/Légifrance's document feed. See
+  `docs/openfisca.md` for what was verified against the real, public
+  `api.fr.openfisca.org` API vs. what's explicitly out of scope
+  (scale/bareme parameters).
+  <br>**Connecteur OpenFisca** : surveille des *paramètres* législatifs
+  précis (SMIC, plafond de la Sécurité sociale...) pour une nouvelle
+  valeur datée — un modèle de contenu différent du flux de documents
+  RSS/Légifrance. Voir `docs/openfisca.md` pour ce qui a été vérifié
+  contre la vraie API publique `api.fr.openfisca.org` vs. ce qui est
+  explicitement hors périmètre (paramètres barème).
 - **Deterministic relevance rules** (keyword/regex/source-field →
   include/exclude/score/tag/requires_review), evaluated before ingestion.
   <br>**Règles de pertinence déterministes** (mot-clé/regex/champ-source
@@ -283,15 +295,19 @@ fonctionnalité marche sans aucun compte externe.
 
 For an RSS watch instead, see `docs/operations.md` ("Adding a new RSS watch
 — minimal example") and the connector/rule contract in `docs/connectors.md`.
-For a Légifrance/PISTE watch, see `docs/legifrance-piste.md`. To store
-content in OCA DMS instead of `ir.attachment`, see
-`docs/oca-dms-integration.md`. To classify documents with AI or export
-approved ones to a RAG/vector-store service, see `docs/ai-providers.md`.
+For a Légifrance/PISTE watch, see `docs/legifrance-piste.md`. For an
+OpenFisca watch (specific legislative parameters, not a document feed),
+see `docs/openfisca.md`. To store content in OCA DMS instead of
+`ir.attachment`, see `docs/oca-dms-integration.md`. To classify documents
+with AI or export approved ones to a RAG/vector-store service, see
+`docs/ai-providers.md`.
 
 Pour une veille RSS, voir `docs/operations.md` (« Adding a new RSS watch —
 minimal example ») et le contrat connecteur/règle dans
 `docs/connectors.md`. Pour une veille Légifrance/PISTE, voir
-`docs/legifrance-piste.md`. Pour stocker le contenu dans OCA DMS plutôt
+`docs/legifrance-piste.md`. Pour une veille OpenFisca (des paramètres
+législatifs précis, pas un flux de documents), voir
+`docs/openfisca.md`. Pour stocker le contenu dans OCA DMS plutôt
 que dans `ir.attachment`, voir `docs/oca-dms-integration.md`. Pour
 classifier des documents avec l'IA ou exporter les documents validés vers
 un service RAG/vector-store, voir `docs/ai-providers.md`.

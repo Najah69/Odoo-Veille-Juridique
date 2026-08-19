@@ -35,6 +35,7 @@ class LegalWatch(models.Model):
             ("manual", "Manual import"),
             ("rss", "RSS/Atom"),
             ("legifrance", "Légifrance / PISTE"),
+            ("openfisca", "OpenFisca (paramètres législatifs)"),
         ],
         string="Connector", required=True, default="manual",
     )
